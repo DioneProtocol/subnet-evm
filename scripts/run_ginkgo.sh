@@ -11,6 +11,11 @@ SUBNET_EVM_PATH=$(
   cd .. && pwd
 )
 
+cd "$SUBNET_EVM_PATH/contracts"
+npm install
+
+cd "$SUBNET_EVM_PATH"
+
 source "$SUBNET_EVM_PATH"/scripts/constants.sh
 
 source "$SUBNET_EVM_PATH"/scripts/versions.sh

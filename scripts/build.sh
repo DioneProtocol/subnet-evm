@@ -33,6 +33,11 @@ SUBNET_EVM_PATH=$(
     cd .. && pwd
 )
 
+cd "$SUBNET_EVM_PATH/contracts/"
+npm install
+npm run build
+cd "$SUBNET_EVM_PATH"
+
 # Load the versions
 source "$SUBNET_EVM_PATH"/scripts/versions.sh
 
