@@ -1,19 +1,19 @@
 # syntax=docker/dockerfile:experimental
 
 # ============= Setting up base Stage ================
-# Set required AVALANCHE_VERSION parameter in build image script
-ARG AVALANCHE_VERSION
+# Set required ODYSSEY_VERSION parameter in build image script
+ARG ODYSSEY_VERSION
 
 # ============= Compilation Stage ================
 FROM golang:1.20.8-bullseye AS builder
 
 WORKDIR /build
 
-# Copy avalanche dependencies first (intermediate docker image caching)
-# Copy avalanchego directory if present (for manual CI case, which uses local dependency)
-COPY go.mod go.sum avalanchego* ./
+# Copy odyssey dependencies first (intermediate docker image caching)
+# Copy odysseygo directory if present (for manual CI case, which uses local dependency)
+COPY go.mod go.sum odysseygo* ./
 
-# Download avalanche dependencies using go mod
+# Download odyssey dependencies using go mod
 RUN go mod download && go mod tidy -compat=1.20
 
 # Copy the code into the container
@@ -26,7 +26,7 @@ ARG CURRENT_BRANCH
 RUN export SUBNET_EVM_COMMIT=$SUBNET_EVM_COMMIT && export CURRENT_BRANCH=$CURRENT_BRANCH && ./scripts/build.sh /build/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
 
 # ============= Cleanup Stage ================
-FROM avaplatform/avalanchego:$AVALANCHE_VERSION AS builtImage
+FROM avaomega/odysseygo:$ODYSSEY_VERSION AS builtImage
 
 # Copy the evm binary into the correct location in the container
-COPY --from=builder /build/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy /avalanchego/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
+COPY --from=builder /build/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy /odysseygo/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
