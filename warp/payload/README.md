@@ -1,6 +1,6 @@
 # Payload
 
-An Avalanche Unsigned Warp Message already includes a `networkID`, `sourceChainID`, and `payload` field. The `payload` field is parsed into one of the types included in this package to be handled by the EVM.
+An Odyssey Unsigned Warp Message already includes a `networkID`, `sourceChainID`, and `payload` field. The `payload` field is parsed into one of the types included in this package to be handled by the EVM.
 
 ## AddressedPayload
 

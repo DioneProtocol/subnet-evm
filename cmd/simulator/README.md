@@ -7,7 +7,7 @@ When building developing your own blockchain using `subnet-evm`, you may want to
 To build the load simulator, navigate to the base of the simulator directory:
 
 ```bash
-cd $GOPATH/src/github.com/ava-labs/subnet-evm/cmd/simulator
+cd $GOPATH/src/github.com/DioneProtocol/subnet-evm/cmd/simulator
 ```
 
 Build the simulator:
@@ -28,26 +28,26 @@ This should give the following output:
 v0.1.0
 ```
 
-To run the load simulator, you must first start an EVM based network. The load simulator works on both the C-Chain and Subnet-EVM, so we will start a single node network and run the load simulator on the C-Chain.
+To run the load simulator, you must first start an EVM based network. The load simulator works on both the D-Chain and Subnet-EVM, so we will start a single node network and run the load simulator on the D-Chain.
 
-To start a single node network, follow the instructions from the AvalancheGo [README](https://github.com/ava-labs/avalanchego#building-avalanchego) to build from source.
+To start a single node network, follow the instructions from the OdysseyGo [README](https://github.com/DioneProtocol/odysseygo#building-odysseygo) to build from source.
 
-Once you've built AvalancheGo, open the AvalancheGo directory in a separate terminal window and run a single node non-staking network with the following command:
+Once you've built OdysseyGo, open the OdysseyGo directory in a separate terminal window and run a single node non-staking network with the following command:
 
 ```bash
-./build/avalanchego --sybil-protection-enabled=false --network-id=local
+./build/odysseygo --sybil-protection-enabled=false --network-id=local
 ```
 
 WARNING:
 
 The staking-enabled flag is only for local testing. Disabling staking serves two functions explicitly for testing purposes:
 
-1. Ignore stake weight on the P-Chain and count each connected peer as having a stake weight of 1
+1. Ignore stake weight on the O-Chain and count each connected peer as having a stake weight of 1
 2. Automatically opts in to validate every Subnet
 
-Once you have AvalancheGo running locally, it will be running an HTTP Server on the default port `9650`. This means that the RPC Endpoint for the C-Chain will be http://127.0.0.1:9650/ext/bc/C/rpc and ws://127.0.0.1:9650/ext/bc/C/ws for WebSocket connections.
+Once you have OdysseyGo running locally, it will be running an HTTP Server on the default port `9650`. This means that the RPC Endpoint for the D-Chain will be http://127.0.0.1:9650/ext/bc/D/rpc and ws://127.0.0.1:9650/ext/bc/D/ws for WebSocket connections.
 
-Now, we can run the simulator command to simulate some load on the local C-Chain for 30s:
+Now, we can run the simulator command to simulate some load on the local D-Chain for 30s:
 
 ```bash
 ./simulator --timeout=1m --workers=1 --max-fee-cap=300 --max-tip-cap=10 --txs-per-worker=50
