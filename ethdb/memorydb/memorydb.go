@@ -33,7 +33,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ava-labs/subnet-evm/ethdb"
+	"github.com/DioneProtocol/subnet-evm/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 )
 

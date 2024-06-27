@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	commonEng "github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/vms/components/chain"
-	"github.com/ava-labs/subnet-evm/core/rawdb"
-	"github.com/ava-labs/subnet-evm/core/state/snapshot"
-	"github.com/ava-labs/subnet-evm/eth"
-	"github.com/ava-labs/subnet-evm/ethdb"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/plugin/evm/message"
-	syncclient "github.com/ava-labs/subnet-evm/sync/client"
-	"github.com/ava-labs/subnet-evm/sync/statesync"
+	"github.com/DioneProtocol/odysseygo/database"
+	"github.com/DioneProtocol/odysseygo/database/versiondb"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow/choices"
+	commonEng "github.com/DioneProtocol/odysseygo/snow/engine/common"
+	"github.com/DioneProtocol/odysseygo/snow/engine/snowman/block"
+	"github.com/DioneProtocol/odysseygo/vms/components/chain"
+	"github.com/DioneProtocol/subnet-evm/core/rawdb"
+	"github.com/DioneProtocol/subnet-evm/core/state/snapshot"
+	"github.com/DioneProtocol/subnet-evm/eth"
+	"github.com/DioneProtocol/subnet-evm/ethdb"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm/message"
+	syncclient "github.com/DioneProtocol/subnet-evm/sync/client"
+	"github.com/DioneProtocol/subnet-evm/sync/statesync"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -35,8 +35,8 @@ const (
 
 var stateSyncSummaryKey = []byte("stateSyncSummary")
 
-// stateSyncClientConfig defines the options and dependencies needed to construct a StateSyncerClient
-type stateSyncClientConfig struct {
+// stateSyndClientConfig defines the options and dependencies needed to construct a StateSyncerClient
+type stateSyndClientConfig struct {
 	enabled    bool
 	skipResume bool
 	// Specifies the number of blocks behind the latest state summary that the chain must be
@@ -60,7 +60,7 @@ type stateSyncClientConfig struct {
 }
 
 type stateSyncerClient struct {
-	*stateSyncClientConfig
+	*stateSyndClientConfig
 
 	resumableSummary message.SyncSummary
 
@@ -72,13 +72,13 @@ type stateSyncerClient struct {
 	stateSyncErr error
 }
 
-func NewStateSyncClient(config *stateSyncClientConfig) StateSyncClient {
+func NewStateSyndClient(config *stateSyndClientConfig) StateSyndClient {
 	return &stateSyncerClient{
-		stateSyncClientConfig: config,
+		stateSyndClientConfig: config,
 	}
 }
 
-type StateSyncClient interface {
+type StateSyndClient interface {
 	// methods that implement the client side of [block.StateSyncableVM]
 	StateSyncEnabled(context.Context) (bool, error)
 	GetOngoingSyncStateSummary(context.Context) (block.StateSummary, error)

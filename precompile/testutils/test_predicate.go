@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
 	cmath "github.com/ethereum/go-ethereum/common/math"
 	"github.com/stretchr/testify/require"
 )

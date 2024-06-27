@@ -6,17 +6,17 @@ package evm
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/subnet-evm/ethdb"
-	"github.com/ava-labs/subnet-evm/metrics"
-	"github.com/ava-labs/subnet-evm/plugin/evm/message"
-	syncHandlers "github.com/ava-labs/subnet-evm/sync/handlers"
-	syncStats "github.com/ava-labs/subnet-evm/sync/handlers/stats"
-	"github.com/ava-labs/subnet-evm/trie"
-	"github.com/ava-labs/subnet-evm/warp"
-	warpHandlers "github.com/ava-labs/subnet-evm/warp/handlers"
-	warpStats "github.com/ava-labs/subnet-evm/warp/handlers/stats"
+	"github.com/DioneProtocol/odysseygo/codec"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/subnet-evm/ethdb"
+	"github.com/DioneProtocol/subnet-evm/metrics"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm/message"
+	syncHandlers "github.com/DioneProtocol/subnet-evm/sync/handlers"
+	syncStats "github.com/DioneProtocol/subnet-evm/sync/handlers/stats"
+	"github.com/DioneProtocol/subnet-evm/trie"
+	"github.com/DioneProtocol/subnet-evm/warp"
+	warpHandlers "github.com/DioneProtocol/subnet-evm/warp/handlers"
+	warpStats "github.com/DioneProtocol/subnet-evm/warp/handlers/stats"
 )
 
 var _ message.RequestHandler = &networkHandler{}

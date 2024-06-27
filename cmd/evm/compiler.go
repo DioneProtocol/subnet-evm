@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ava-labs/subnet-evm/cmd/evm/internal/compiler"
+	"github.com/DioneProtocol/subnet-evm/cmd/evm/internal/compiler"
 
 	"github.com/urfave/cli/v2"
 )

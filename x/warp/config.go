@@ -8,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
-	predicateutils "github.com/ava-labs/subnet-evm/utils/predicate"
-	warpValidators "github.com/ava-labs/subnet-evm/warp/validators"
+	"github.com/DioneProtocol/odysseygo/utils/set"
+	"github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
+	predicateutils "github.com/DioneProtocol/subnet-evm/utils/predicate"
+	warpValidators "github.com/DioneProtocol/subnet-evm/warp/validators"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/log"
@@ -122,7 +122,7 @@ func (c *Config) verifyWarpMessage(predicateContext *precompileconfig.PredicateC
 		&warpMsg.UnsignedMessage,
 		predicateContext.SnowCtx.NetworkID,
 		warpValidators.NewState(predicateContext.SnowCtx), // Wrap validators.State on the chain snow context to special case the Primary Network
-		predicateContext.ProposerVMBlockCtx.PChainHeight,
+		predicateContext.ProposerVMBlockCtx.OChainHeight,
 		quorumNumerator,
 		params.WarpQuorumDenominator,
 	); err != nil {
@@ -193,7 +193,7 @@ func (c *Config) verifyPredicate(predicateContext *precompileconfig.PredicateCon
 	return c.verifyWarpMessage(predicateContext, warpMessage)
 }
 
-// VerifyPredicate verifies the predicate represents a valid signed and properly formatted Avalanche Warp Message.
+// VerifyPredicate verifies the predicate represents a valid signed and properly formatted Odyssey Warp Message.
 func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateContext, predicates [][]byte) []byte {
 	resultBitSet := set.NewBits()
 

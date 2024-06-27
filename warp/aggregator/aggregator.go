@@ -6,13 +6,13 @@ package aggregator
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/subnet-evm/params"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow/validators"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
+	"github.com/DioneProtocol/subnet-evm/params"
 )
 
-// Aggregator fulfills requests to aggregate signatures of a subnet's validator set for Avalanche Warp Messages.
+// Aggregator fulfills requests to aggregate signatures of a subnet's validator set for Odyssey Warp Messages.
 type Aggregator struct {
 	subnetID ids.ID
 	client   SignatureBackend
@@ -28,17 +28,17 @@ func NewAggregator(subnetID ids.ID, state validators.State, client SignatureBack
 	}
 }
 
-func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *avalancheWarp.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
+func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *odysseyWarp.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
 	// Note: we use the current height as a best guess of the canonical validator set when the aggregated signature will be verified
-	// by the recipient chain. If the validator set changes from [pChainHeight] to the P-Chain height that is actually specified by the
+	// by the recipient chain. If the validator set changes from [oChainHeight] to the O-Chain height that is actually specified by the
 	// ProposerVM header when this message is verified, then the aggregate signature could become outdated and require re-aggregation.
-	pChainHeight, err := a.state.GetCurrentHeight(ctx)
+	oChainHeight, err := a.state.GetCurrentHeight(ctx)
 	if err != nil {
 		return nil, err
 	}
 	job := newSignatureAggregationJob(
 		a.client,
-		pChainHeight,
+		oChainHeight,
 		a.subnetID,
 		quorumNum,
 		quorumNum,

@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow/validators"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	"github.com/DioneProtocol/odysseygo/utils/set"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -32,13 +32,13 @@ type signatureAggregationJob struct {
 	// Denominator to use when checking if we've reached the threshold
 	quorumDen uint64
 	state     validators.State
-	msg       *avalancheWarp.UnsignedMessage
+	msg       *odysseyWarp.UnsignedMessage
 }
 
 type AggregateSignatureResult struct {
 	SignatureWeight uint64
 	TotalWeight     uint64
-	Message         *avalancheWarp.Message
+	Message         *odysseyWarp.Message
 }
 
 func newSignatureAggregationJob(
@@ -49,7 +49,7 @@ func newSignatureAggregationJob(
 	maxNeededQuorumNum uint64,
 	quorumDen uint64,
 	state validators.State,
-	msg *avalancheWarp.UnsignedMessage,
+	msg *odysseyWarp.UnsignedMessage,
 ) *signatureAggregationJob {
 	return &signatureAggregationJob{
 		client:             client,
@@ -66,7 +66,7 @@ func newSignatureAggregationJob(
 // Execute aggregates signatures for the requested message
 func (a *signatureAggregationJob) Execute(ctx context.Context) (*AggregateSignatureResult, error) {
 	log.Info("Fetching signature", "subnetID", a.subnetID, "height", a.height)
-	validators, totalWeight, err := avalancheWarp.GetCanonicalValidatorSet(ctx, a.state, a.height, a.subnetID)
+	validators, totalWeight, err := odysseyWarp.GetCanonicalValidatorSet(ctx, a.state, a.height, a.subnetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
 	}
@@ -129,7 +129,7 @@ func (a *signatureAggregationJob) Execute(ctx context.Context) (*AggregateSignat
 			)
 
 			// If the signature weight meets the requested threshold, cancel signature fetching
-			if err := avalancheWarp.VerifyWeight(signatureWeight, totalWeight, a.maxNeededQuorumNum, a.quorumDen); err == nil {
+			if err := odysseyWarp.VerifyWeight(signatureWeight, totalWeight, a.maxNeededQuorumNum, a.quorumDen); err == nil {
 				log.Info("Verify weight passed, exiting aggregation early",
 					"maxNeededQuorumNum", a.maxNeededQuorumNum,
 					"totalWeight", totalWeight,
@@ -142,7 +142,7 @@ func (a *signatureAggregationJob) Execute(ctx context.Context) (*AggregateSignat
 	wg.Wait()
 
 	// If I failed to fetch sufficient signature stake, return an error
-	if err := avalancheWarp.VerifyWeight(signatureWeight, totalWeight, a.minValidQuorumNum, a.quorumDen); err != nil {
+	if err := odysseyWarp.VerifyWeight(signatureWeight, totalWeight, a.minValidQuorumNum, a.quorumDen); err != nil {
 		return nil, fmt.Errorf("failed to aggregate signature: %w", err)
 	}
 
@@ -152,12 +152,12 @@ func (a *signatureAggregationJob) Execute(ctx context.Context) (*AggregateSignat
 		return nil, fmt.Errorf("failed to aggregate BLS signatures: %w", err)
 	}
 
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &odysseyWarp.BitSetSignature{
 		Signers: bitSet.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 
-	msg, err := avalancheWarp.NewMessage(a.msg, warpSignature)
+	msg, err := odysseyWarp.NewMessage(a.msg, warpSignature)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct warp message: %w", err)
 	}

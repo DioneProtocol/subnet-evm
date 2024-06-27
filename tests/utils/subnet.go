@@ -13,14 +13,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/api/health"
-	"github.com/ava-labs/avalanchego/api/info"
-	"github.com/ava-labs/avalanchego/genesis"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	wallet "github.com/ava-labs/avalanchego/wallet/subnet/primary"
-	"github.com/ava-labs/subnet-evm/core"
-	"github.com/ava-labs/subnet-evm/plugin/evm"
+	"github.com/DioneProtocol/odysseygo/api/health"
+	"github.com/DioneProtocol/odysseygo/api/info"
+	"github.com/DioneProtocol/odysseygo/genesis"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/vms/secp256k1fx"
+	wallet "github.com/DioneProtocol/odysseygo/wallet/subnet/primary"
+	"github.com/DioneProtocol/subnet-evm/core"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/go-cmd/cmd"
 	"github.com/onsi/ginkgo/v2"
@@ -44,11 +44,11 @@ func (s *SubnetSuite) SetBlockchainIDs(blockchainIDs map[string]string) {
 	s.blockchainIDs = blockchainIDs
 }
 
-// CreateSubnetsSuite creates subnets for given [genesisFiles], and registers a before suite that starts an AvalancheGo process to use for the e2e tests.
+// CreateSubnetsSuite creates subnets for given [genesisFiles], and registers a before suite that starts an OdysseyGo process to use for the e2e tests.
 // genesisFiles is a map of test aliases to genesis file paths.
 func CreateSubnetsSuite(genesisFiles map[string]string) *SubnetSuite {
-	// Keep track of the AvalancheGo external bash script, it is null for most
-	// processes except the first process that starts AvalancheGo
+	// Keep track of the OdysseyGo external bash script, it is null for most
+	// processes except the first process that starts OdysseyGo
 	var startCmd *cmd.Cmd
 
 	// This is used to pass the blockchain IDs from the SynchronizedBeforeSuite() to the tests
@@ -58,17 +58,17 @@ func CreateSubnetsSuite(genesisFiles map[string]string) *SubnetSuite {
 	// SynchronizedBeforeSuite() which runs once, and its return value is passed
 	// over to each worker.
 	//
-	// Here an AvalancheGo node instance is started, and subnets are created for
+	// Here an OdysseyGo node instance is started, and subnets are created for
 	// each test case. Each test case has its own subnet, therefore all tests
 	// can run in parallel without any issue.
 	//
 	var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
-		ctx, cancel := context.WithTimeout(context.Background(), BootAvalancheNodeTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), BootOdysseyNodeTimeout)
 		defer cancel()
 
 		wd, err := os.Getwd()
 		gomega.Expect(err).Should(gomega.BeNil())
-		log.Info("Starting AvalancheGo node", "wd", wd)
+		log.Info("Starting OdysseyGo node", "wd", wd)
 		cmd, err := RunCommand("./scripts/run.sh")
 		startCmd = cmd
 		gomega.Expect(err).Should(gomega.BeNil())
@@ -78,7 +78,7 @@ func CreateSubnetsSuite(genesisFiles map[string]string) *SubnetSuite {
 		healthy, err := health.AwaitReady(ctx, healthClient, HealthCheckTimeout, nil)
 		gomega.Expect(err).Should(gomega.BeNil())
 		gomega.Expect(healthy).Should(gomega.BeTrue())
-		log.Info("AvalancheGo node is healthy")
+		log.Info("OdysseyGo node is healthy")
 
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		blockchainIDs := make(map[string]string)
@@ -99,7 +99,7 @@ func CreateSubnetsSuite(genesisFiles map[string]string) *SubnetSuite {
 
 	// SynchronizedAfterSuite() takes two functions, the first runs after each test suite is done and the second
 	// function is executed once when all the tests are done. This function is used
-	// to gracefully shutdown the AvalancheGo node.
+	// to gracefully shutdown the OdysseyGo node.
 	var _ = ginkgo.SynchronizedAfterSuite(func() {}, func() {
 		gomega.Expect(startCmd).ShouldNot(gomega.BeNil())
 		gomega.Expect(startCmd.Stop()).Should(gomega.BeNil())
@@ -116,13 +116,13 @@ func CreateNewSubnet(ctx context.Context, genesisFilePath string) string {
 	// MakeWallet fetches the available UTXOs owned by [kc] on the network
 	// that [LocalAPIURI] is hosting.
 	wallet, err := wallet.MakeWallet(ctx, &wallet.WalletConfig{
-		URI:          DefaultLocalNodeURI,
-		AVAXKeychain: kc,
-		EthKeychain:  kc,
+		URI:           DefaultLocalNodeURI,
+		DIONEKeychain: kc,
+		EthKeychain:   kc,
 	})
 	gomega.Expect(err).Should(gomega.BeNil())
 
-	pWallet := wallet.P()
+	oWallet := wallet.O()
 
 	owner := &secp256k1fx.OutputOwners{
 		Threshold: 1,
@@ -138,7 +138,7 @@ func CreateNewSubnet(ctx context.Context, genesisFilePath string) string {
 	gomega.Expect(err).Should(gomega.BeNil())
 
 	log.Info("Creating new subnet")
-	createSubnetTx, err := pWallet.IssueCreateSubnetTx(owner)
+	createSubnetTx, err := oWallet.IssueCreateSubnetTx(owner)
 	gomega.Expect(err).Should(gomega.BeNil())
 
 	genesis := &core.Genesis{}
@@ -146,7 +146,7 @@ func CreateNewSubnet(ctx context.Context, genesisFilePath string) string {
 	gomega.Expect(err).Should(gomega.BeNil())
 
 	log.Info("Creating new Subnet-EVM blockchain", "genesis", genesis)
-	createChainTx, err := pWallet.IssueCreateChainTx(
+	createChainTx, err := oWallet.IssueCreateChainTx(
 		createSubnetTx.ID(),
 		genesisBytes,
 		evm.ID,

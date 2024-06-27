@@ -6,7 +6,7 @@ package testutils
 import (
 	"testing"
 
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
 	"github.com/stretchr/testify/require"
 )
 

@@ -34,10 +34,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/subnet-evm/core/state"
-	"github.com/ava-labs/subnet-evm/core/vm"
-	"github.com/ava-labs/subnet-evm/eth/tracers"
-	"github.com/ava-labs/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/core/state"
+	"github.com/DioneProtocol/subnet-evm/core/vm"
+	"github.com/DioneProtocol/subnet-evm/eth/tracers"
+	"github.com/DioneProtocol/subnet-evm/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
@@ -19,13 +19,13 @@ var errInvalidSignature = errors.New("invalid signature")
 // SignatureBackend defines the minimum network interface to perform signature aggregation
 type SignatureBackend interface {
 	// FetchWarpSignature attempts to fetch a BLS Signature from [nodeID] for [unsignedWarpMessage]
-	FetchWarpSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *avalancheWarp.UnsignedMessage) (*bls.Signature, error)
+	FetchWarpSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *odysseyWarp.UnsignedMessage) (*bls.Signature, error)
 }
 
 // signatureJob fetches a single signature using the injected dependency SignatureBackend and returns a verified signature of the requested message.
 type signatureJob struct {
 	backend SignatureBackend
-	msg     *avalancheWarp.UnsignedMessage
+	msg     *odysseyWarp.UnsignedMessage
 
 	nodeID    ids.NodeID
 	publicKey *bls.PublicKey
@@ -36,7 +36,7 @@ func (s *signatureJob) String() string {
 	return fmt.Sprintf("(NodeID: %s, UnsignedMsgID: %s)", s.nodeID, s.msg.ID())
 }
 
-func newSignatureJob(backend SignatureBackend, validator *avalancheWarp.Validator, msg *avalancheWarp.UnsignedMessage) *signatureJob {
+func newSignatureJob(backend SignatureBackend, validator *odysseyWarp.Validator, msg *odysseyWarp.UnsignedMessage) *signatureJob {
 	return &signatureJob{
 		backend:   backend,
 		msg:       msg,

@@ -6,7 +6,7 @@ package modules
 import (
 	"bytes"
 
-	"github.com/ava-labs/subnet-evm/precompile/contract"
+	"github.com/DioneProtocol/subnet-evm/precompile/contract"
 	"github.com/ethereum/go-ethereum/common"
 )
 

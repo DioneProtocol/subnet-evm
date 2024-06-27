@@ -7,9 +7,9 @@
 package rewardmanager
 
 import (
-	"github.com/ava-labs/subnet-evm/precompile/allowlist"
-	"github.com/ava-labs/subnet-evm/precompile/contract"
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/subnet-evm/precompile/allowlist"
+	"github.com/DioneProtocol/subnet-evm/precompile/contract"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
 	"github.com/ethereum/go-ethereum/common"
 )
 

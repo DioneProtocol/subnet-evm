@@ -29,11 +29,11 @@ package core
 import (
 	"fmt"
 
-	"github.com/ava-labs/subnet-evm/consensus"
-	"github.com/ava-labs/subnet-evm/core/state"
-	"github.com/ava-labs/subnet-evm/core/types"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/trie"
+	"github.com/DioneProtocol/subnet-evm/consensus"
+	"github.com/DioneProtocol/subnet-evm/core/state"
+	"github.com/DioneProtocol/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/trie"
 )
 
 // BlockValidator is responsible for validating block headers, uncles and

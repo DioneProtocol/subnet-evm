@@ -27,7 +27,7 @@
 package trie
 
 import (
-	"github.com/ava-labs/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"

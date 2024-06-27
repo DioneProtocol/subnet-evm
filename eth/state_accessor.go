@@ -32,12 +32,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ava-labs/subnet-evm/core"
-	"github.com/ava-labs/subnet-evm/core/state"
-	"github.com/ava-labs/subnet-evm/core/types"
-	"github.com/ava-labs/subnet-evm/core/vm"
-	"github.com/ava-labs/subnet-evm/eth/tracers"
-	"github.com/ava-labs/subnet-evm/trie"
+	"github.com/DioneProtocol/subnet-evm/core"
+	"github.com/DioneProtocol/subnet-evm/core/state"
+	"github.com/DioneProtocol/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/core/vm"
+	"github.com/DioneProtocol/subnet-evm/eth/tracers"
+	"github.com/DioneProtocol/subnet-evm/trie"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

@@ -6,15 +6,15 @@ package validators
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow"
+	"github.com/DioneProtocol/odysseygo/snow/validators"
+	"github.com/DioneProtocol/odysseygo/utils/constants"
 )
 
 var _ validators.State = (*State)(nil)
 
-// State provides a special case used to handle Avalanche Warp Message verification for messages sent
+// State provides a special case used to handle Odyssey Warp Message verification for messages sent
 // from the Primary Network. Subnets have strictly fewer validators than the Primary Network, so we require
 // signatures from a threshold of the RECEIVING subnet validator set rather than the full Primary Network
 // since the receiving subnet already relies on a majority of its validators being correct.

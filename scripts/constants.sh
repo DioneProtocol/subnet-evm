@@ -3,8 +3,8 @@
 # Set the PATHS
 GOPATH="$(go env GOPATH)"
 
-# Avalabs docker hub
-DOCKERHUB_REPO="avaplatform/avalanchego"
+# DioneProtocol docker hub
+DOCKERHUB_REPO="dioneprotocol/odysseygo"
 
 # if this isn't a git repository (say building from a release), don't set our git constants.
 if [ ! -d .git ]
@@ -26,7 +26,7 @@ fi
 
 echo "Using branch: ${CURRENT_BRANCH}"
 
-BUILD_IMAGE_ID=${BUILD_IMAGE_ID:-"${AVALANCHEGO_VERSION}-Subnet-EVM-${CURRENT_BRANCH}"}
+BUILD_IMAGE_ID=${BUILD_IMAGE_ID:-"${ODYSSEYGO_VERSION}-Subnet-EVM-${CURRENT_BRANCH}"}
 
 # Static compilation
 STATIC_LD_FLAGS=''

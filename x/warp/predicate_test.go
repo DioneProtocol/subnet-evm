@@ -9,27 +9,27 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
-	"github.com/ava-labs/subnet-evm/precompile/testutils"
-	subnetEVMUtils "github.com/ava-labs/subnet-evm/utils"
-	predicateutils "github.com/ava-labs/subnet-evm/utils/predicate"
-	warpPayload "github.com/ava-labs/subnet-evm/warp/payload"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow"
+	"github.com/DioneProtocol/odysseygo/snow/engine/snowman/block"
+	"github.com/DioneProtocol/odysseygo/snow/validators"
+	"github.com/DioneProtocol/odysseygo/utils"
+	"github.com/DioneProtocol/odysseygo/utils/constants"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	"github.com/DioneProtocol/odysseygo/utils/set"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/subnet-evm/precompile/testutils"
+	subnetEVMUtils "github.com/DioneProtocol/subnet-evm/utils"
+	predicateutils "github.com/DioneProtocol/subnet-evm/utils/predicate"
+	warpPayload "github.com/DioneProtocol/subnet-evm/warp/payload"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-const pChainHeight uint64 = 1337
+const oChainHeight uint64 = 1337
 
 var (
 	_ utils.Sortable[*testValidator] = (*testValidator)(nil)
@@ -41,7 +41,7 @@ var (
 	destinationChainID = ids.GenerateTestID()
 
 	// valid unsigned warp message used throughout testing
-	unsignedMsg *avalancheWarp.UnsignedMessage
+	unsignedMsg *odysseyWarp.UnsignedMessage
 	// valid addressed payload
 	addressedPayload      *warpPayload.AddressedPayload
 	addressedPayloadBytes []byte
@@ -92,7 +92,7 @@ func init() {
 		panic(err)
 	}
 	addressedPayloadBytes = addressedPayload.Bytes()
-	unsignedMsg, err = avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, addressedPayload.Bytes())
+	unsignedMsg, err = odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, addressedPayload.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -108,7 +108,7 @@ func init() {
 type testValidator struct {
 	nodeID ids.NodeID
 	sk     *bls.SecretKey
-	vdr    *avalancheWarp.Validator
+	vdr    *odysseyWarp.Validator
 }
 
 func (v *testValidator) Less(o *testValidator) bool {
@@ -126,7 +126,7 @@ func newTestValidator() *testValidator {
 	return &testValidator{
 		nodeID: nodeID,
 		sk:     sk,
-		vdr: &avalancheWarp.Validator{
+		vdr: &odysseyWarp.Validator{
 			PublicKey:      pk,
 			PublicKeyBytes: pk.Serialize(),
 			Weight:         3,
@@ -140,13 +140,13 @@ type signatureTest struct {
 	stateF    func(*gomock.Controller) validators.State
 	quorumNum uint64
 	quorumDen uint64
-	msgF      func(*require.Assertions) *avalancheWarp.Message
+	msgF      func(*require.Assertions) *odysseyWarp.Message
 	err       error
 }
 
 // createWarpMessage constructs a signed warp message using the global variable [unsignedMsg]
 // and the first [numKeys] signatures from [blsSignatures]
-func createWarpMessage(numKeys int) *avalancheWarp.Message {
+func createWarpMessage(numKeys int) *odysseyWarp.Message {
 	aggregateSignature, err := bls.AggregateSignatures(blsSignatures[0:numKeys])
 	if err != nil {
 		panic(err)
@@ -155,11 +155,11 @@ func createWarpMessage(numKeys int) *avalancheWarp.Message {
 	for i := 0; i < numKeys; i++ {
 		bitSet.Add(i)
 	}
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &odysseyWarp.BitSetSignature{
 		Signers: bitSet.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
-	warpMsg, err := avalancheWarp.NewMessage(unsignedMsg, warpSignature)
+	warpMsg, err := odysseyWarp.NewMessage(unsignedMsg, warpSignature)
 	if err != nil {
 		panic(err)
 	}
@@ -220,7 +220,7 @@ func createValidPredicateTest(snowCtx *snow.Context, numKeys uint64, predicateBy
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
-				PChainHeight: 1,
+				OChainHeight: 1,
 			},
 		},
 		StorageSlots: [][]byte{predicateBytes},
@@ -259,8 +259,8 @@ func TestWarpNilProposerCtx(t *testing.T) {
 func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	require := require.New(t)
 	numKeys := 10
-	cChainID := ids.GenerateTestID()
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, cChainID, []byte{1, 2, 3})
+	dChainID := ids.GenerateTestID()
+	unsignedMsg, err := odysseyWarp.NewUnsignedMessage(networkID, dChainID, []byte{1, 2, 3})
 	require.NoError(err)
 
 	getValidatorsOutput := make(map[ids.NodeID]*validators.GetValidatorOutput)
@@ -280,11 +280,11 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	for i := 0; i < numKeys; i++ {
 		bitSet.Add(i)
 	}
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &odysseyWarp.BitSetSignature{
 		Signers: bitSet.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
-	warpMsg, err := avalancheWarp.NewMessage(unsignedMsg, warpSignature)
+	warpMsg, err := odysseyWarp.NewMessage(unsignedMsg, warpSignature)
 	require.NoError(err)
 
 	predicateBytes := predicateutils.PackPredicate(warpMsg.Bytes())
@@ -292,11 +292,11 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	snowCtx := snow.DefaultContextTest()
 	snowCtx.SubnetID = ids.GenerateTestID()
 	snowCtx.ChainID = ids.GenerateTestID()
-	snowCtx.CChainID = cChainID
+	snowCtx.DChainID = dChainID
 	snowCtx.NetworkID = networkID
 	snowCtx.ValidatorState = &validators.TestState{
 		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
-			require.Equal(chainID, cChainID)
+			require.Equal(chainID, dChainID)
 			return constants.PrimaryNetworkID, nil // Return Primary Network SubnetID
 		},
 		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
@@ -310,7 +310,7 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
-				PChainHeight: 1,
+				OChainHeight: 1,
 			},
 		},
 		StorageSlots: [][]byte{predicateBytes},
@@ -340,7 +340,7 @@ func TestInvalidPredicatePacking(t *testing.T) {
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
-				PChainHeight: 1,
+				OChainHeight: 1,
 			},
 		},
 		StorageSlots: [][]byte{predicateBytes},
@@ -371,7 +371,7 @@ func TestInvalidWarpMessage(t *testing.T) {
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
-				PChainHeight: 1,
+				OChainHeight: 1,
 			},
 		},
 		StorageSlots: [][]byte{predicateBytes},
@@ -399,14 +399,14 @@ func TestInvalidAddressedPayload(t *testing.T) {
 	for i := 0; i < numKeys; i++ {
 		bitSet.Add(i)
 	}
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &odysseyWarp.BitSetSignature{
 		Signers: bitSet.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 	// Create an unsigned message with an invalid addressed payload
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, []byte{1, 2, 3})
+	unsignedMsg, err := odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, []byte{1, 2, 3})
 	require.NoError(t, err)
-	warpMsg, err := avalancheWarp.NewMessage(unsignedMsg, warpSignature)
+	warpMsg, err := odysseyWarp.NewMessage(unsignedMsg, warpSignature)
 	require.NoError(t, err)
 	warpMsgBytes := warpMsg.Bytes()
 	predicateBytes := predicateutils.PackPredicate(warpMsgBytes)
@@ -416,7 +416,7 @@ func TestInvalidAddressedPayload(t *testing.T) {
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
-				PChainHeight: 1,
+				OChainHeight: 1,
 			},
 		},
 		StorageSlots: [][]byte{predicateBytes},
@@ -429,16 +429,16 @@ func TestInvalidAddressedPayload(t *testing.T) {
 }
 
 func TestInvalidBitSet(t *testing.T) {
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+	unsignedMsg, err := odysseyWarp.NewUnsignedMessage(
 		networkID,
 		sourceChainID,
 		[]byte{1, 2, 3},
 	)
 	require.NoError(t, err)
 
-	msg, err := avalancheWarp.NewMessage(
+	msg, err := odysseyWarp.NewMessage(
 		unsignedMsg,
-		&avalancheWarp.BitSetSignature{
+		&odysseyWarp.BitSetSignature{
 			Signers:   make([]byte, 1),
 			Signature: [bls.SignatureLen]byte{},
 		},
@@ -460,7 +460,7 @@ func TestInvalidBitSet(t *testing.T) {
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
-				PChainHeight: 1,
+				OChainHeight: 1,
 			},
 		},
 		StorageSlots: [][]byte{predicateBytes},
@@ -506,7 +506,7 @@ func TestWarpSignatureWeightsDefaultQuorumNumerator(t *testing.T) {
 			PredicateContext: &precompileconfig.PredicateContext{
 				SnowCtx: snowCtx,
 				ProposerVMBlockCtx: &block.Context{
-					PChainHeight: 1,
+					OChainHeight: 1,
 				},
 			},
 			StorageSlots: [][]byte{predicateBytes},
@@ -561,7 +561,7 @@ func TestWarpMultiplePredicates(t *testing.T) {
 			PredicateContext: &precompileconfig.PredicateContext{
 				SnowCtx: snowCtx,
 				ProposerVMBlockCtx: &block.Context{
-					PChainHeight: 1,
+					OChainHeight: 1,
 				},
 			},
 			StorageSlots: predicates,
@@ -604,7 +604,7 @@ func TestWarpSignatureWeightsNonDefaultQuorumNumerator(t *testing.T) {
 			PredicateContext: &precompileconfig.PredicateContext{
 				SnowCtx: snowCtx,
 				ProposerVMBlockCtx: &block.Context{
-					PChainHeight: 1,
+					OChainHeight: 1,
 				},
 			},
 			StorageSlots: [][]byte{predicateBytes},

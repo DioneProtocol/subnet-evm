@@ -9,13 +9,13 @@ import (
 	"os"
 	"time"
 
-	runner_sdk "github.com/ava-labs/avalanche-network-runner/client"
-	"github.com/ava-labs/avalanche-network-runner/rpcpb"
-	runner_server "github.com/ava-labs/avalanche-network-runner/server"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/subnet-evm/plugin/evm"
+	runner_sdk "github.com/DioneProtocol/odyssey-network-runner/client"
+	"github.com/DioneProtocol/odyssey-network-runner/rpcpb"
+	runner_server "github.com/DioneProtocol/odyssey-network-runner/server"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/utils/logging"
+	"github.com/DioneProtocol/odysseygo/utils/wrappers"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -26,23 +26,23 @@ import (
 type Subnet struct {
 	// SubnetID is the txID of the transaction that created the subnet
 	SubnetID ids.ID
-	// Current ANR assumes one blockchain per subnet, so we have a single blockchainID here
+	// Current ONR assumes one blockchain per subnet, so we have a single blockchainID here
 	BlockchainID ids.ID
 	// ValidatorURIs is the base URIs for each participant of the Subnet
 	ValidatorURIs []string
 }
 
-type ANRConfig struct {
-	LogLevel            string
-	AvalancheGoExecPath string
-	PluginDir           string
-	GlobalNodeConfig    string
+type ONRConfig struct {
+	LogLevel          string
+	OdysseyGoExecPath string
+	PluginDir         string
+	GlobalNodeConfig  string
 }
 
-// NetworkManager is a wrapper around the ANR to simplify the setup and teardown code
-// of tests that rely on the ANR.
+// NetworkManager is a wrapper around the ONR to simplify the setup and teardown code
+// of tests that rely on the ONR.
 type NetworkManager struct {
-	ANRConfig ANRConfig
+	ONRConfig ONRConfig
 
 	subnets []*Subnet
 
@@ -53,39 +53,39 @@ type NetworkManager struct {
 	serverCtxCancel context.CancelFunc
 }
 
-// NewDefaultANRConfig returns a default config for launching the avalanche-network-runner manager
+// NewDefaultONRConfig returns a default config for launching the odyssey-network-runner manager
 // with both a server and client.
-// By default, it expands $GOPATH/src/github.com/ava-labs/avalanchego/build/ directory to extract
-// the AvalancheGoExecPath and PluginDir arguments.
-// If the AVALANCHEGO_BUILD_PATH environment variable is set, it overrides the default location for
-// the AvalancheGoExecPath and PluginDir arguments.
-func NewDefaultANRConfig() ANRConfig {
-	defaultConfig := ANRConfig{
-		LogLevel:            "info",
-		AvalancheGoExecPath: os.ExpandEnv("$GOPATH/src/github.com/ava-labs/avalanchego/build/avalanchego"),
-		PluginDir:           os.ExpandEnv("$GOPATH/src/github.com/ava-labs/avalanchego/build/plugins"),
+// By default, it expands $GOPATH/src/github.com/DioneProtocol/odysseygo/build/ directory to extract
+// the OdysseyGoExecPath and PluginDir arguments.
+// If the ODYSSEYGO_BUILD_PATH environment variable is set, it overrides the default location for
+// the OdysseyGoExecPath and PluginDir arguments.
+func NewDefaultONRConfig() ONRConfig {
+	defaultConfig := ONRConfig{
+		LogLevel:          "info",
+		OdysseyGoExecPath: os.ExpandEnv("$GOPATH/src/github.com/DioneProtocol/odysseygo/build/odysseygo"),
+		PluginDir:         os.ExpandEnv("$GOPATH/src/github.com/DioneProtocol/odysseygo/build/plugins"),
 		GlobalNodeConfig: `{
 			"log-display-level":"info",
 			"proposervm-use-current-height":true
 		}`,
 	}
-	// If AVALANCHEGO_BUILD_PATH is populated, override location set by GOPATH
-	if envBuildPath, exists := os.LookupEnv("AVALANCHEGO_BUILD_PATH"); exists {
-		defaultConfig.AvalancheGoExecPath = fmt.Sprintf("%s/avalanchego", envBuildPath)
+	// If ODYSSEYGO_BUILD_PATH is populated, override location set by GOPATH
+	if envBuildPath, exists := os.LookupEnv("ODYSSEYGO_BUILD_PATH"); exists {
+		defaultConfig.OdysseyGoExecPath = fmt.Sprintf("%s/odysseygo", envBuildPath)
 		defaultConfig.PluginDir = fmt.Sprintf("%s/plugins", envBuildPath)
 	}
 	return defaultConfig
 }
 
 // NewNetworkManager constructs a new instance of a network manager
-func NewNetworkManager(config ANRConfig) *NetworkManager {
+func NewNetworkManager(config ONRConfig) *NetworkManager {
 	manager := &NetworkManager{
-		ANRConfig: config,
+		ONRConfig: config,
 	}
 
 	logLevel, err := logging.ToLevel(config.LogLevel)
 	if err != nil {
-		panic(fmt.Errorf("invalid ANR log level: %w", err))
+		panic(fmt.Errorf("invalid ONR log level: %w", err))
 	}
 	manager.logFactory = logging.NewFactory(logging.Config{
 		DisplayLevel: logLevel,
@@ -95,7 +95,7 @@ func NewNetworkManager(config ANRConfig) *NetworkManager {
 	return manager
 }
 
-// startServer starts a new ANR server and sets/overwrites the anrServer, done channel, and serverCtxCancel function.
+// startServer starts a new ONR server and sets/overwrites the anrServer, done channel, and serverCtxCancel function.
 func (n *NetworkManager) startServer(ctx context.Context) (<-chan struct{}, error) {
 	done := make(chan struct{})
 	zapServerLog, err := n.logFactory.Make("server")
@@ -103,9 +103,9 @@ func (n *NetworkManager) startServer(ctx context.Context) (<-chan struct{}, erro
 		return nil, fmt.Errorf("failed to make server log: %w", err)
 	}
 
-	logLevel, err := logging.ToLevel(n.ANRConfig.LogLevel)
+	logLevel, err := logging.ToLevel(n.ONRConfig.LogLevel)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse ANR log level: %w", err)
+		return nil, fmt.Errorf("failed to parse ONR log level: %w", err)
 	}
 
 	n.anrServer, err = runner_server.New(
@@ -121,7 +121,7 @@ func (n *NetworkManager) startServer(ctx context.Context) (<-chan struct{}, erro
 		zapServerLog,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to start ANR server: %w", err)
+		return nil, fmt.Errorf("failed to start ONR server: %w", err)
 	}
 	n.done = done
 
@@ -130,9 +130,9 @@ func (n *NetworkManager) startServer(ctx context.Context) (<-chan struct{}, erro
 	n.serverCtxCancel = serverCtxCancel
 	go func() {
 		if err := n.anrServer.Run(serverCtx); err != nil {
-			log.Error("Error shutting down ANR server", "err", err)
+			log.Error("Error shutting down ONR server", "err", err)
 		} else {
-			log.Info("Terminating ANR Server")
+			log.Info("Terminating ONR Server")
 		}
 		close(done)
 	}()
@@ -140,12 +140,12 @@ func (n *NetworkManager) startServer(ctx context.Context) (<-chan struct{}, erro
 	return done, nil
 }
 
-// startClient starts an ANR Client dialing the ANR server at the expected endpoint.
+// startClient starts an ONR Client dialing the ONR server at the expected endpoint.
 // Note: will overwrite client if it already exists.
 func (n *NetworkManager) startClient() error {
-	logLevel, err := logging.ToLevel(n.ANRConfig.LogLevel)
+	logLevel, err := logging.ToLevel(n.ONRConfig.LogLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse ANR log level: %w", err)
+		return fmt.Errorf("failed to parse ONR log level: %w", err)
 	}
 	logFactory := logging.NewFactory(logging.Config{
 		DisplayLevel: logLevel,
@@ -161,13 +161,13 @@ func (n *NetworkManager) startClient() error {
 		DialTimeout: 10 * time.Second,
 	}, zapLog)
 	if err != nil {
-		return fmt.Errorf("failed to start ANR client: %w", err)
+		return fmt.Errorf("failed to start ONR client: %w", err)
 	}
 
 	return nil
 }
 
-// initServer starts the ANR server if it is not populated
+// initServer starts the ONR server if it is not populated
 func (n *NetworkManager) initServer() error {
 	if n.anrServer != nil {
 		return nil
@@ -177,7 +177,7 @@ func (n *NetworkManager) initServer() error {
 	return err
 }
 
-// initClient starts an ANR client if it not populated
+// initClient starts an ONR client if it not populated
 func (n *NetworkManager) initClient() error {
 	if n.anrClient != nil {
 		return nil
@@ -186,7 +186,7 @@ func (n *NetworkManager) initClient() error {
 	return n.startClient()
 }
 
-// init starts the ANR server and client if they are not yet populated
+// init starts the ONR server and client if they are not yet populated
 func (n *NetworkManager) init() error {
 	if err := n.initServer(); err != nil {
 		return err
@@ -200,24 +200,24 @@ func (n *NetworkManager) StartDefaultNetwork(ctx context.Context) (<-chan struct
 		return nil, err
 	}
 
-	log.Info("Sending 'start'", "AvalancheGoExecPath", n.ANRConfig.AvalancheGoExecPath)
+	log.Info("Sending 'start'", "OdysseyGoExecPath", n.ONRConfig.OdysseyGoExecPath)
 
 	// Start cluster
 	resp, err := n.anrClient.Start(
 		ctx,
-		n.ANRConfig.AvalancheGoExecPath,
-		runner_sdk.WithPluginDir(n.ANRConfig.PluginDir),
-		runner_sdk.WithGlobalNodeConfig(n.ANRConfig.GlobalNodeConfig),
+		n.ONRConfig.OdysseyGoExecPath,
+		runner_sdk.WithPluginDir(n.ONRConfig.PluginDir),
+		runner_sdk.WithGlobalNodeConfig(n.ONRConfig.GlobalNodeConfig),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to start ANR network: %w", err)
+		return nil, fmt.Errorf("failed to start ONR network: %w", err)
 	}
 	log.Info("successfully started cluster", "RootDataDir", resp.ClusterInfo.RootDataDir, "Subnets", resp.GetClusterInfo().GetSubnets())
 	return n.done, nil
 }
 
 // SetupNetwork constructs blockchains with the given [blockchainSpecs] and adds them to the network manager.
-// Uses [execPath] as the AvalancheGo binary execution path for any started nodes.
+// Uses [execPath] as the OdysseyGo binary execution path for any started nodes.
 // Note: this assumes that the default network has already been constructed.
 func (n *NetworkManager) SetupNetwork(ctx context.Context, execPath string, blockchainSpecs []*rpcpb.BlockchainSpec) error {
 	// timeout according to how many blockchains we're creating
@@ -253,7 +253,7 @@ func (n *NetworkManager) SetupNetwork(ctx context.Context, execPath string, bloc
 
 	status, err := n.anrClient.Status(cctx)
 	if err != nil {
-		return fmt.Errorf("failed to get ANR status: %w", err)
+		return fmt.Errorf("failed to get ONR status: %w", err)
 	}
 	nodeInfos := status.GetClusterInfo().GetNodeInfos()
 
@@ -300,7 +300,7 @@ func (n *NetworkManager) TeardownNetwork() error {
 	return errs.Err
 }
 
-// CloseClient closes the connection between the ANR client and server without terminating the
+// CloseClient closes the connection between the ONR client and server without terminating the
 // running network.
 func (n *NetworkManager) CloseClient() error {
 	if n.anrClient == nil {
@@ -332,7 +332,7 @@ func (n *NetworkManager) GetSubnet(subnetID ids.ID) (*Subnet, bool) {
 
 func RegisterFiveNodeSubnetRun() func() *Subnet {
 	var (
-		config   = NewDefaultANRConfig()
+		config   = NewDefaultONRConfig()
 		manager  = NewNetworkManager(config)
 		numNodes = 5
 	)
@@ -350,7 +350,7 @@ func RegisterFiveNodeSubnetRun() func() *Subnet {
 		gomega.Expect(err).Should(gomega.BeNil())
 		err = manager.SetupNetwork(
 			ctx,
-			config.AvalancheGoExecPath,
+			config.OdysseyGoExecPath,
 			[]*rpcpb.BlockchainSpec{
 				{
 					VmName:      evm.IDStr,

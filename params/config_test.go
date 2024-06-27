@@ -34,10 +34,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/subnet-evm/precompile/contracts/nativeminter"
-	"github.com/ava-labs/subnet-evm/precompile/contracts/rewardmanager"
-	"github.com/ava-labs/subnet-evm/precompile/contracts/txallowlist"
-	"github.com/ava-labs/subnet-evm/utils"
+	"github.com/DioneProtocol/subnet-evm/precompile/contracts/nativeminter"
+	"github.com/DioneProtocol/subnet-evm/precompile/contracts/rewardmanager"
+	"github.com/DioneProtocol/subnet-evm/precompile/contracts/txallowlist"
+	"github.com/DioneProtocol/subnet-evm/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
@@ -157,15 +157,15 @@ func TestConfigRules(t *testing.T) {
 	}
 
 	var stamp uint64
-	if r := c.AvalancheRules(big.NewInt(0), stamp); r.IsSubnetEVM {
+	if r := c.OdysseyRules(big.NewInt(0), stamp); r.IsSubnetEVM {
 		t.Errorf("expected %v to not be subnet-evm", stamp)
 	}
 	stamp = 500
-	if r := c.AvalancheRules(big.NewInt(0), stamp); !r.IsSubnetEVM {
+	if r := c.OdysseyRules(big.NewInt(0), stamp); !r.IsSubnetEVM {
 		t.Errorf("expected %v to be subnet-evm", stamp)
 	}
 	stamp = math.MaxInt64
-	if r := c.AvalancheRules(big.NewInt(0), stamp); !r.IsSubnetEVM {
+	if r := c.OdysseyRules(big.NewInt(0), stamp); !r.IsSubnetEVM {
 		t.Errorf("expected %v to be subnet-evm", stamp)
 	}
 }
@@ -250,10 +250,10 @@ func TestActivePrecompiles(t *testing.T) {
 		},
 	}
 
-	rules0 := config.AvalancheRules(common.Big0, 0)
+	rules0 := config.OdysseyRules(common.Big0, 0)
 	require.True(t, rules0.IsPrecompileEnabled(nativeminter.Module.Address))
 
-	rules1 := config.AvalancheRules(common.Big0, 1)
+	rules1 := config.OdysseyRules(common.Big0, 1)
 	require.False(t, rules1.IsPrecompileEnabled(nativeminter.Module.Address))
 }
 

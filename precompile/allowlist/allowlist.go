@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/subnet-evm/precompile/contract"
-	"github.com/ava-labs/subnet-evm/vmerrs"
+	"github.com/DioneProtocol/subnet-evm/precompile/contract"
+	"github.com/DioneProtocol/subnet-evm/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 )
 

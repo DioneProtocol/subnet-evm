@@ -35,8 +35,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/subnet-evm/core/rawdb"
-	"github.com/ava-labs/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/core/rawdb"
+	"github.com/DioneProtocol/subnet-evm/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -175,8 +175,8 @@ func (b *testChainIndexBackend) assertBlocks(headNum, failNum uint64) (uint64, b
 		sections = (headNum + 1 - b.indexer.confirmsReq) / b.indexer.sectionSize
 		if sections > b.stored {
 			// expect processed blocks
-			for expectd := b.stored * b.indexer.sectionSize; expectd < sections*b.indexer.sectionSize; expectd++ {
-				if expectd > failNum {
+			for expected := b.stored * b.indexer.sectionSize; expected < sections*b.indexer.sectionSize; expected++ {
+				if expected > failNum {
 					// rolled back after processing started, no more process calls expected
 					// wait until updating is done to make sure that processing actually fails
 					var updating bool
@@ -192,15 +192,15 @@ func (b *testChainIndexBackend) assertBlocks(headNum, failNum uint64) (uint64, b
 					if updating {
 						b.t.Fatalf("update did not finish")
 					}
-					sections = expectd / b.indexer.sectionSize
+					sections = expected / b.indexer.sectionSize
 					break
 				}
 				select {
 				case <-time.After(10 * time.Second):
-					b.t.Fatalf("Expected processed block #%d, got nothing", expectd)
+					b.t.Fatalf("Expected processed block #%d, got nothing", expected)
 				case processed := <-b.processCh:
-					if processed != expectd {
-						b.t.Errorf("Expected processed block #%d, got #%d", expectd, processed)
+					if processed != expected {
+						b.t.Errorf("Expected processed block #%d, got #%d", expected, processed)
 					}
 				}
 			}

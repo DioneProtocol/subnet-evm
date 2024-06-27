@@ -4,7 +4,7 @@
 package params
 
 import (
-	"github.com/ava-labs/subnet-evm/utils"
+	"github.com/DioneProtocol/subnet-evm/utils"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 		DUpgradeTimestamp:  utils.NewUint64(0),
 	}
 
-	FujiNetworkUpgrades = MandatoryNetworkUpgrades{
+	TestnetNetworkUpgrades = MandatoryNetworkUpgrades{
 		SubnetEVMTimestamp: utils.NewUint64(0),
 		// DUpgradeTimestamp: utils.NewUint64(0), // TODO: Uncomment and set this to the correct value
 	}
@@ -32,9 +32,9 @@ var (
 // MandatoryNetworkUpgrades contains timestamps that enable mandatory network upgrades.
 // These upgrades are mandatory, meaning that if a node does not upgrade by the
 // specified timestamp, it will be unable to participate in consensus.
-// Avalanche specific network upgrades are also included here.
+// Odyssey specific network upgrades are also included here.
 type MandatoryNetworkUpgrades struct {
-	// SubnetEVMTimestamp is a placeholder that activates Avalanche Upgrades prior to ApricotPhase6 (nil = no fork, 0 = already activated)
+	// SubnetEVMTimestamp is a placeholder that activates Odyssey Upgrades prior to ApricotPhase6 (nil = no fork, 0 = already activated)
 	SubnetEVMTimestamp *uint64 `json:"subnetEVMTimestamp,omitempty"`
 	// DUpgrade activates the Shanghai upgrade from Ethereum. (nil = no fork, 0 = already activated)
 	DUpgradeTimestamp *uint64 `json:"dUpgradeTimestamp,omitempty"`

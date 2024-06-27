@@ -29,10 +29,10 @@ package ethconfig
 import (
 	"time"
 
-	"github.com/ava-labs/subnet-evm/core"
-	"github.com/ava-labs/subnet-evm/core/txpool"
-	"github.com/ava-labs/subnet-evm/eth/gasprice"
-	"github.com/ava-labs/subnet-evm/miner"
+	"github.com/DioneProtocol/subnet-evm/core"
+	"github.com/DioneProtocol/subnet-evm/core/txpool"
+	"github.com/DioneProtocol/subnet-evm/eth/gasprice"
+	"github.com/DioneProtocol/subnet-evm/miner"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -48,7 +48,7 @@ var DefaultFullGPOConfig = gasprice.Config{
 	MinGasUsed:          gasprice.DefaultMinGasUsed,
 }
 
-// DefaultConfig contains default settings for use on the Avalanche main net.
+// DefaultConfig contains default settings for use on the Odyssey main net.
 var DefaultConfig = NewDefaultConfig()
 
 func NewDefaultConfig() Config {

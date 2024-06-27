@@ -4,8 +4,8 @@
 package statesync
 
 import (
-	"github.com/ava-labs/subnet-evm/core/rawdb"
-	"github.com/ava-labs/subnet-evm/ethdb"
+	"github.com/DioneProtocol/subnet-evm/core/rawdb"
+	"github.com/DioneProtocol/subnet-evm/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 )
 

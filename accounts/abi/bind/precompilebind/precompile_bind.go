@@ -35,9 +35,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ava-labs/subnet-evm/accounts/abi"
-	"github.com/ava-labs/subnet-evm/accounts/abi/bind"
-	"github.com/ava-labs/subnet-evm/precompile/allowlist"
+	"github.com/DioneProtocol/subnet-evm/accounts/abi"
+	"github.com/DioneProtocol/subnet-evm/accounts/abi/bind"
+	"github.com/DioneProtocol/subnet-evm/precompile/allowlist"
 )
 
 // BindedFiles contains the generated binding file contents.

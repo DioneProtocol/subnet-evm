@@ -8,17 +8,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
 	"github.com/stretchr/testify/require"
 )
 
 type mockFetcher struct {
-	fetch func(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *avalancheWarp.UnsignedMessage) (*bls.Signature, error)
+	fetch func(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *odysseyWarp.UnsignedMessage) (*bls.Signature, error)
 }
 
-func (m *mockFetcher) FetchWarpSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+func (m *mockFetcher) FetchWarpSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 	return m.fetch(ctx, nodeID, unsignedWarpMessage)
 }
 
@@ -28,13 +28,13 @@ var (
 	blsPublicKeys []*bls.PublicKey
 	networkID     uint32 = 54321
 	sourceChainID        = ids.GenerateTestID()
-	unsignedMsg   *avalancheWarp.UnsignedMessage
+	unsignedMsg   *odysseyWarp.UnsignedMessage
 	blsSignatures []*bls.Signature
 )
 
 func init() {
 	var err error
-	unsignedMsg, err = avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, []byte{1, 2, 3})
+	unsignedMsg, err = odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, []byte{1, 2, 3})
 	if err != nil {
 		panic(err)
 	}
@@ -75,11 +75,11 @@ func executeSignatureJobTest(t testing.TB, test signatureJobTest) {
 func TestSignatureRequestSuccess(t *testing.T) {
 	job := newSignatureJob(
 		&mockFetcher{
-			fetch: func(context.Context, ids.NodeID, *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(context.Context, ids.NodeID, *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				return blsSignatures[0], nil
 			},
 		},
-		&avalancheWarp.Validator{
+		&odysseyWarp.Validator{
 			NodeIDs:   nodeIDs[:1],
 			PublicKey: blsPublicKeys[0],
 			Weight:    10,
@@ -98,11 +98,11 @@ func TestSignatureRequestFails(t *testing.T) {
 	err := errors.New("expected error")
 	job := newSignatureJob(
 		&mockFetcher{
-			fetch: func(context.Context, ids.NodeID, *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(context.Context, ids.NodeID, *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				return nil, err
 			},
 		},
-		&avalancheWarp.Validator{
+		&odysseyWarp.Validator{
 			NodeIDs:   nodeIDs[:1],
 			PublicKey: blsPublicKeys[0],
 			Weight:    10,
@@ -120,11 +120,11 @@ func TestSignatureRequestFails(t *testing.T) {
 func TestSignatureRequestInvalidSignature(t *testing.T) {
 	job := newSignatureJob(
 		&mockFetcher{
-			fetch: func(context.Context, ids.NodeID, *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(context.Context, ids.NodeID, *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				return blsSignatures[1], nil
 			},
 		},
-		&avalancheWarp.Validator{
+		&odysseyWarp.Validator{
 			NodeIDs:   nodeIDs[:1],
 			PublicKey: blsPublicKeys[0],
 			Weight:    10,

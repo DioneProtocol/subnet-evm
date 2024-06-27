@@ -13,22 +13,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ava-labs/avalanche-network-runner/rpcpb"
-	"github.com/ava-labs/avalanchego/api/info"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/subnet-evm/core/types"
-	"github.com/ava-labs/subnet-evm/ethclient"
-	"github.com/ava-labs/subnet-evm/interfaces"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/plugin/evm"
-	"github.com/ava-labs/subnet-evm/tests/utils"
-	"github.com/ava-labs/subnet-evm/tests/utils/runner"
-	predicateutils "github.com/ava-labs/subnet-evm/utils/predicate"
-	warpBackend "github.com/ava-labs/subnet-evm/warp"
-	"github.com/ava-labs/subnet-evm/x/warp"
+	"github.com/DioneProtocol/odyssey-network-runner/rpcpb"
+	"github.com/DioneProtocol/odysseygo/api/info"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	"github.com/DioneProtocol/odysseygo/utils/set"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
+	"github.com/DioneProtocol/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/ethclient"
+	"github.com/DioneProtocol/subnet-evm/interfaces"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm"
+	"github.com/DioneProtocol/subnet-evm/tests/utils"
+	"github.com/DioneProtocol/subnet-evm/tests/utils/runner"
+	predicateutils "github.com/DioneProtocol/subnet-evm/utils/predicate"
+	warpBackend "github.com/DioneProtocol/subnet-evm/warp"
+	"github.com/DioneProtocol/subnet-evm/x/warp"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
@@ -39,7 +39,7 @@ import (
 const fundedKeyStr = "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
 
 var (
-	config              = runner.NewDefaultANRConfig()
+	config              = runner.NewDefaultONRConfig()
 	manager             = runner.NewNetworkManager(config)
 	warpChainConfigPath string
 )
@@ -54,7 +54,7 @@ func toWebsocketURI(uri string, blockchainID string) string {
 }
 
 // BeforeSuite starts the default network and adds 10 new nodes as validators with BLS keys
-// registered on the P-Chain.
+// registered on the O-Chain.
 // Adds two disjoint sets of 5 of the new validator nodes to validate two new subnets with a
 // a single Subnet-EVM blockchain.
 var _ = ginkgo.BeforeSuite(func() {
@@ -77,12 +77,12 @@ var _ = ginkgo.BeforeSuite(func() {
 	gomega.Expect(err).Should(gomega.BeNil())
 	warpChainConfigPath = f.Name()
 
-	// Construct the network using the avalanche-network-runner
+	// Construct the network using the odyssey-network-runner
 	_, err = manager.StartDefaultNetwork(ctx)
 	gomega.Expect(err).Should(gomega.BeNil())
 	err = manager.SetupNetwork(
 		ctx,
-		config.AvalancheGoExecPath,
+		config.OdysseyGoExecPath,
 		[]*rpcpb.BlockchainSpec{
 			{
 				VmName:      evm.IDStr,
@@ -132,9 +132,9 @@ var _ = ginkgo.AfterSuite(func() {
 
 var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 	var (
-		unsignedWarpMsg                *avalancheWarp.UnsignedMessage
+		unsignedWarpMsg                *odysseyWarp.UnsignedMessage
 		unsignedWarpMessageID          ids.ID
-		signedWarpMsg                  *avalancheWarp.Message
+		signedWarpMsg                  *odysseyWarp.Message
 		blockchainIDA, blockchainIDB   ids.ID
 		chainAURIs, chainBURIs         []string
 		chainAWSClient, chainBWSClient ethclient.Client
@@ -142,7 +142,7 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 		fundedKey                      *ecdsa.PrivateKey
 		fundedAddress                  common.Address
 		payload                        = []byte{1, 2, 3}
-		txSigner                       = types.LatestSignerForChainID(chainID)
+		taSigner                       = types.LatestSignerForChainID(chainID)
 		err                            error
 	)
 
@@ -215,7 +215,7 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 			Value:     common.Big0,
 			Data:      packedInput,
 		})
-		signedTx, err := types.SignTx(tx, txSigner, fundedKey)
+		signedTx, err := types.SignTx(tx, taSigner, fundedKey)
 		gomega.Expect(err).Should(gomega.BeNil())
 		log.Info("Sending sendWarpMessage transaction", "txHash", signedTx.Hash())
 		err = chainAWSClient.SendTransaction(ctx, signedTx)
@@ -237,7 +237,7 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 		// the log extracted from the last block.
 		txLog := logs[0]
 		log.Info("Parsing logData as unsigned warp message")
-		unsignedMsg, err := avalancheWarp.ParseUnsignedMessage(txLog.Data)
+		unsignedMsg, err := odysseyWarp.ParseUnsignedMessage(txLog.Data)
 		gomega.Expect(err).Should(gomega.BeNil())
 
 		// Set local variables for the duration of the test
@@ -267,7 +267,7 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 	})
 
 	// Aggregate a Warp Signature by sending an API request to each node requesting its signature and manually
-	// constructing a valid Avalanche Warp Message
+	// constructing a valid Odyssey Warp Message
 	ginkgo.It("Aggregate Warp Signature via API", ginkgo.Label("Warp", "ReceiveWarp", "AggregateWarpManually"), func() {
 		ctx := context.Background()
 
@@ -300,14 +300,14 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 		for i := 0; i < len(blsSignatures); i++ {
 			signersBitSet.Add(i)
 		}
-		warpSignature := &avalancheWarp.BitSetSignature{
+		warpSignature := &odysseyWarp.BitSetSignature{
 			Signers: signersBitSet.Bytes(),
 		}
 
 		blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 		copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-		warpMsg, err := avalancheWarp.NewMessage(
+		warpMsg, err := odysseyWarp.NewMessage(
 			unsignedWarpMsg,
 			warpSignature,
 		)
@@ -330,7 +330,7 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 		gomega.Expect(signedWarpMessageBytes).Should(gomega.Equal(signedWarpMsg.Bytes()))
 	})
 
-	// Verify successful delivery of the Avalanche Warp Message from Chain A to Chain B
+	// Verify successful delivery of the Odyssey Warp Message from Chain A to Chain B
 	ginkgo.It("Verify Message from A to B", ginkgo.Label("Warp", "VerifyMessage"), func() {
 		ctx := context.Background()
 
@@ -358,7 +358,7 @@ var _ = ginkgo.Describe("[Warp]", ginkgo.Ordered, func() {
 			warp.ContractAddress,
 			signedWarpMsg.Bytes(),
 		)
-		signedTx, err := types.SignTx(tx, txSigner, fundedKey)
+		signedTx, err := types.SignTx(tx, taSigner, fundedKey)
 		gomega.Expect(err).Should(gomega.BeNil())
 		txBytes, err := signedTx.MarshalBinary()
 		gomega.Expect(err).Should(gomega.BeNil())

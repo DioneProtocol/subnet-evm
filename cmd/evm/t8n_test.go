@@ -34,8 +34,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ava-labs/subnet-evm/cmd/evm/internal/t8ntool"
-	"github.com/ava-labs/subnet-evm/internal/cmdtest"
+	"github.com/DioneProtocol/subnet-evm/cmd/evm/internal/t8ntool"
+	"github.com/DioneProtocol/subnet-evm/internal/cmdtest"
 	"github.com/docker/docker/pkg/reexec"
 )
 

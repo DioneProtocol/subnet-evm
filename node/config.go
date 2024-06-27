@@ -31,10 +31,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ava-labs/subnet-evm/accounts"
-	"github.com/ava-labs/subnet-evm/accounts/external"
-	"github.com/ava-labs/subnet-evm/accounts/keystore"
-	"github.com/ava-labs/subnet-evm/rpc"
+	"github.com/DioneProtocol/subnet-evm/accounts"
+	"github.com/DioneProtocol/subnet-evm/accounts/external"
+	"github.com/DioneProtocol/subnet-evm/accounts/keystore"
+	"github.com/DioneProtocol/subnet-evm/rpc"
 	"github.com/ethereum/go-ethereum/log"
 )
 

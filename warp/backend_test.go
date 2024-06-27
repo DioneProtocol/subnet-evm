@@ -6,11 +6,11 @@ package warp
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/hashing"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/DioneProtocol/odysseygo/database/memdb"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	"github.com/DioneProtocol/odysseygo/utils/hashing"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +25,7 @@ func TestClearDB(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := odysseyWarp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(warpSigner, db, 500)
 
 	// use multiple messages to test that all messages get cleared
@@ -34,7 +34,7 @@ func TestClearDB(t *testing.T) {
 
 	// add all messages
 	for _, payload := range payloads {
-		unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
+		unsignedMsg, err := odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
 		require.NoError(t, err)
 		messageID := hashing.ComputeHash256Array(unsignedMsg.Bytes())
 		messageIDs = append(messageIDs, messageID)
@@ -60,11 +60,11 @@ func TestAddAndGetValidMessage(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := odysseyWarp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(warpSigner, db, 500)
 
 	// Create a new unsigned message and add it to the warp backend.
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
+	unsignedMsg, err := odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
 	require.NoError(t, err)
 	err = backend.AddMessage(unsignedMsg)
 	require.NoError(t, err)
@@ -84,9 +84,9 @@ func TestAddAndGetUnknownMessage(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := odysseyWarp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(warpSigner, db, 500)
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
+	unsignedMsg, err := odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
 	require.NoError(t, err)
 
 	// Try getting a signature for a message that was not added.
@@ -100,13 +100,13 @@ func TestZeroSizedCache(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := odysseyWarp.NewSigner(sk, networkID, sourceChainID)
 
 	// Verify zero sized cache works normally, because the lru cache will be initialized to size 1 for any size parameter <= 0.
 	backend := NewBackend(warpSigner, db, 0)
 
 	// Create a new unsigned message and add it to the warp backend.
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
+	unsignedMsg, err := odysseyWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
 	require.NoError(t, err)
 	err = backend.AddMessage(unsignedMsg)
 	require.NoError(t, err)

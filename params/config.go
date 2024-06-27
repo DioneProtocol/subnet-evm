@@ -32,11 +32,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/subnet-evm/commontype"
-	"github.com/ava-labs/subnet-evm/precompile/modules"
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
-	"github.com/ava-labs/subnet-evm/utils"
+	"github.com/DioneProtocol/odysseygo/snow"
+	"github.com/DioneProtocol/subnet-evm/commontype"
+	"github.com/DioneProtocol/subnet-evm/precompile/modules"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/subnet-evm/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -92,7 +92,7 @@ var (
 	}
 
 	TestChainConfig = &ChainConfig{
-		AvalancheContext:    AvalancheContext{snow.DefaultContextTest()},
+		OdysseyContext:      OdysseyContext{snow.DefaultContextTest()},
 		ChainID:             big.NewInt(1),
 		FeeConfig:           DefaultFeeConfig,
 		AllowFeeRecipients:  false,
@@ -115,7 +115,7 @@ var (
 	}
 
 	TestSubnetEVMConfig = &ChainConfig{
-		AvalancheContext:    AvalancheContext{snow.DefaultContextTest()},
+		OdysseyContext:      OdysseyContext{snow.DefaultContextTest()},
 		ChainID:             big.NewInt(1),
 		FeeConfig:           DefaultFeeConfig,
 		AllowFeeRecipients:  false,
@@ -137,7 +137,7 @@ var (
 	}
 
 	TestPreSubnetEVMConfig = &ChainConfig{
-		AvalancheContext:         AvalancheContext{snow.DefaultContextTest()},
+		OdysseyContext:           OdysseyContext{snow.DefaultContextTest()},
 		ChainID:                  big.NewInt(1),
 		FeeConfig:                DefaultFeeConfig,
 		AllowFeeRecipients:       false,
@@ -156,11 +156,11 @@ var (
 		UpgradeConfig:            UpgradeConfig{},
 	}
 
-	TestRules = TestChainConfig.AvalancheRules(new(big.Int), 0)
+	TestRules = TestChainConfig.OdysseyRules(new(big.Int), 0)
 )
 
 // UpgradeConfig includes the following configs that may be specified in upgradeBytes:
-// - Timestamps that enable avalanche network upgrades,
+// - Timestamps that enable odyssey network upgrades,
 // - Enabling or disabling precompiles as network upgrades.
 type UpgradeConfig struct {
 	// Config for optional timestamps that enable network upgrades.
@@ -175,8 +175,8 @@ type UpgradeConfig struct {
 	PrecompileUpgrades []PrecompileUpgrade `json:"precompileUpgrades,omitempty"`
 }
 
-// AvalancheContext provides Avalanche specific context directly into the EVM.
-type AvalancheContext struct {
+// OdysseyContext provides Odyssey specific context directly into the EVM.
+type OdysseyContext struct {
 	SnowCtx *snow.Context
 }
 
@@ -186,7 +186,7 @@ type AvalancheContext struct {
 // that any network, identified by its genesis block, can have its own
 // set of configuration options.
 type ChainConfig struct {
-	AvalancheContext `json:"-"` // Avalanche specific context set during VM initialization. Not serialized.
+	OdysseyContext `json:"-"` // Odyssey specific context set during VM initialization. Not serialized.
 
 	ChainID            *big.Int             `json:"chainId"`                      // chainId identifies the current chain and is used for replay protection
 	FeeConfig          commontype.FeeConfig `json:"feeConfig"`                    // Set the configuration for the dynamic fee algorithm
@@ -210,7 +210,7 @@ type ChainConfig struct {
 	MandatoryNetworkUpgrades             // Config for timestamps that enable mandatory network upgrades. Skip encoding/decoding directly into ChainConfig.
 	OptionalNetworkUpgrades              // Config for optional timestamps that enable network upgrades
 	GenesisPrecompiles       Precompiles `json:"-"` // Config for enabling precompiles from genesis. JSON encode/decode will be handled by the custom marshaler/unmarshaler.
-	UpgradeConfig            `json:"-"`  // Config specified in upgradeBytes (avalanche network upgrades or enable/disabling precompiles). Skip encoding/decoding directly into ChainConfig.
+	UpgradeConfig            `json:"-"`  // Config specified in upgradeBytes (odyssey network upgrades or enable/disabling precompiles). Skip encoding/decoding directly into ChainConfig.
 }
 
 // UnmarshalJSON parses the JSON-encoded data and stores the result in the
@@ -285,10 +285,10 @@ func (c *ChainConfig) Description() string {
 	}
 	banner += "Mandatory Upgrades:\n"
 	if c.SubnetEVMTimestamp != nil {
-		banner += fmt.Sprintf(" - SubnetEVM Timestamp:             @%-10v (https://github.com/ava-labs/avalanchego/releases/tag/v1.10.0)\n", *c.SubnetEVMTimestamp)
+		banner += fmt.Sprintf(" - SubnetEVM Timestamp:             @%-10v (https://github.com/DioneProtocol/odysseygo/releases/tag/v1.10.0)\n", *c.SubnetEVMTimestamp)
 	}
 	if c.DUpgradeTimestamp != nil {
-		banner += fmt.Sprintf(" - DUpgrade Timestamp:              @%-10v (https://github.com/ava-labs/avalanchego/releases/tag/v1.11.0)\n", *c.DUpgradeTimestamp)
+		banner += fmt.Sprintf(" - DUpgrade Timestamp:              @%-10v (https://github.com/DioneProtocol/odysseygo/releases/tag/v1.11.0)\n", *c.DUpgradeTimestamp)
 	}
 	banner += "\n"
 
@@ -447,7 +447,7 @@ func (c *ChainConfig) Verify() error {
 type fork struct {
 	name      string
 	block     *big.Int // some go-ethereum forks use block numbers
-	timestamp *uint64  // Avalanche forks use timestamps
+	timestamp *uint64  // Odyssey forks use timestamps
 	optional  bool     // if true, the fork may be nil and next fork is still allowed
 }
 
@@ -471,7 +471,7 @@ func (c *ChainConfig) CheckConfigForkOrder() error {
 		return err
 	}
 
-	// Note: In Avalanche, hard forks must take place via block timestamps instead
+	// Note: In Odyssey, hard forks must take place via block timestamps instead
 	// of block numbers since blocks are produced asynchronously. Therefore, we do not
 	// check that the block timestamps in the same way as for
 	// the block number forks since it would not be a meaningful comparison.
@@ -521,7 +521,7 @@ func checkForks(forks []fork, blockFork bool) error {
 }
 
 // checkCompatible confirms that [newcfg] is backwards compatible with [c] to upgrade with the given head block height and timestamp.
-// This confirms that all Ethereum and Avalanche upgrades are backwards compatible as well as that the precompile config is backwards
+// This confirms that all Ethereum and Odyssey upgrades are backwards compatible as well as that the precompile config is backwards
 // compatible.
 func (c *ChainConfig) checkCompatible(newcfg *ChainConfig, height *big.Int, time uint64) *ConfigCompatError {
 	if isForkBlockIncompatible(c.HomesteadBlock, newcfg.HomesteadBlock, height) {
@@ -559,7 +559,7 @@ func (c *ChainConfig) checkCompatible(newcfg *ChainConfig, height *big.Int, time
 		return newBlockCompatError("Muir Glacier fork block", c.MuirGlacierBlock, newcfg.MuirGlacierBlock)
 	}
 
-	// Check avalanhe network upgrades
+	// Check odyssey network upgrades
 	if err := c.CheckMandatoryCompatible(&newcfg.MandatoryNetworkUpgrades, time); err != nil {
 		return err
 	}
@@ -710,7 +710,7 @@ type Rules struct {
 	IsHomestead, IsEIP150, IsEIP155, IsEIP158               bool
 	IsByzantium, IsConstantinople, IsPetersburg, IsIstanbul bool
 
-	// Rules for Avalanche releases
+	// Rules for Odyssey releases
 	IsSubnetEVM bool
 	IsDUpgrade  bool
 
@@ -752,9 +752,9 @@ func (c *ChainConfig) rules(num *big.Int) Rules {
 	}
 }
 
-// AvalancheRules returns the Avalanche modified rules to support Avalanche
+// OdysseyRules returns the Odyssey modified rules to support Odyssey
 // network upgrades
-func (c *ChainConfig) AvalancheRules(blockNum *big.Int, timestamp uint64) Rules {
+func (c *ChainConfig) OdysseyRules(blockNum *big.Int, timestamp uint64) Rules {
 	rules := c.rules(blockNum)
 
 	rules.IsSubnetEVM = c.IsSubnetEVM(timestamp)

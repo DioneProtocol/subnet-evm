@@ -6,8 +6,8 @@ package deployerallowlist
 import (
 	"testing"
 
-	"github.com/ava-labs/subnet-evm/core/state"
-	"github.com/ava-labs/subnet-evm/precompile/allowlist"
+	"github.com/DioneProtocol/subnet-evm/core/state"
+	"github.com/DioneProtocol/subnet-evm/precompile/allowlist"
 )
 
 func TestContractDeployerAllowListRun(t *testing.T) {

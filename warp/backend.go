@@ -6,12 +6,12 @@ package warp
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/cache"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/subnet-evm/ethdb"
+	"github.com/DioneProtocol/odysseygo/cache"
+	"github.com/DioneProtocol/odysseygo/database"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
+	"github.com/DioneProtocol/subnet-evm/ethdb"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -23,13 +23,13 @@ const batchSize = ethdb.IdealBatchSize
 // The backend is also used to query for warp message signatures by the signature request handler.
 type Backend interface {
 	// AddMessage signs [unsignedMessage] and adds it to the warp backend database
-	AddMessage(unsignedMessage *avalancheWarp.UnsignedMessage) error
+	AddMessage(unsignedMessage *odysseyWarp.UnsignedMessage) error
 
 	// GetSignature returns the signature of the requested message hash.
 	GetSignature(messageHash ids.ID) ([bls.SignatureLen]byte, error)
 
 	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
-	GetMessage(messageHash ids.ID) (*avalancheWarp.UnsignedMessage, error)
+	GetMessage(messageHash ids.ID) (*odysseyWarp.UnsignedMessage, error)
 
 	// Clear clears the entire db
 	Clear() error
@@ -38,18 +38,18 @@ type Backend interface {
 // backend implements Backend, keeps track of warp messages, and generates message signatures.
 type backend struct {
 	db             database.Database
-	warpSigner     avalancheWarp.Signer
+	warpSigner     odysseyWarp.Signer
 	signatureCache *cache.LRU[ids.ID, [bls.SignatureLen]byte]
-	messageCache   *cache.LRU[ids.ID, *avalancheWarp.UnsignedMessage]
+	messageCache   *cache.LRU[ids.ID, *odysseyWarp.UnsignedMessage]
 }
 
 // NewBackend creates a new Backend, and initializes the signature cache and message tracking database.
-func NewBackend(warpSigner avalancheWarp.Signer, db database.Database, cacheSize int) Backend {
+func NewBackend(warpSigner odysseyWarp.Signer, db database.Database, cacheSize int) Backend {
 	return &backend{
 		db:             db,
 		warpSigner:     warpSigner,
 		signatureCache: &cache.LRU[ids.ID, [bls.SignatureLen]byte]{Size: cacheSize},
-		messageCache:   &cache.LRU[ids.ID, *avalancheWarp.UnsignedMessage]{Size: cacheSize},
+		messageCache:   &cache.LRU[ids.ID, *odysseyWarp.UnsignedMessage]{Size: cacheSize},
 	}
 }
 
@@ -58,7 +58,7 @@ func (b *backend) Clear() error {
 	return database.Clear(b.db, batchSize)
 }
 
-func (b *backend) AddMessage(unsignedMessage *avalancheWarp.UnsignedMessage) error {
+func (b *backend) AddMessage(unsignedMessage *odysseyWarp.UnsignedMessage) error {
 	messageID := unsignedMessage.ID()
 
 	// In the case when a node restarts, and possibly changes its bls key, the cache gets emptied but the database does not.
@@ -102,7 +102,7 @@ func (b *backend) GetSignature(messageID ids.ID) ([bls.SignatureLen]byte, error)
 	return signature, nil
 }
 
-func (b *backend) GetMessage(messageID ids.ID) (*avalancheWarp.UnsignedMessage, error) {
+func (b *backend) GetMessage(messageID ids.ID) (*odysseyWarp.UnsignedMessage, error) {
 	if message, ok := b.messageCache.Get(messageID); ok {
 		return message, nil
 	}
@@ -112,7 +112,7 @@ func (b *backend) GetMessage(messageID ids.ID) (*avalancheWarp.UnsignedMessage, 
 		return nil, fmt.Errorf("failed to get warp message %s from db: %w", messageID.String(), err)
 	}
 
-	unsignedMessage, err := avalancheWarp.ParseUnsignedMessage(unsignedMessageBytes)
+	unsignedMessage, err := odysseyWarp.ParseUnsignedMessage(unsignedMessageBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse unsigned message %s: %w", messageID.String(), err)
 	}

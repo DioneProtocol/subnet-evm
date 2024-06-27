@@ -6,7 +6,7 @@ package stateupgrade
 import (
 	"math/big"
 
-	"github.com/ava-labs/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

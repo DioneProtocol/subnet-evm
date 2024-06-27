@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/DioneProtocol/odysseygo/api"
+	"github.com/DioneProtocol/odysseygo/utils/rpc"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -37,10 +37,10 @@ func NewClient(uri, chain string) Client {
 	}
 }
 
-// NewCChainClient returns a Client for interacting with the C Chain
-func NewCChainClient(uri string) Client {
+// NewDChainClient returns a Client for interacting with the D Chain
+func NewDChainClient(uri string) Client {
 	// TODO: Update for Subnet-EVM compatibility
-	return NewClient(uri, "C")
+	return NewClient(uri, "D")
 }
 
 func (c *client) StartCPUProfiler(ctx context.Context) error {
@@ -59,7 +59,7 @@ func (c *client) LockProfile(ctx context.Context) error {
 	return c.requester.SendRequest(ctx, "admin.lockProfile", struct{}{}, &api.EmptyReply{})
 }
 
-// SetLogLevel dynamically sets the log level for the C Chain
+// SetLogLevel dynamically sets the log level for the D Chain
 func (c *client) SetLogLevel(ctx context.Context, level log.Lvl) error {
 	return c.requester.SendRequest(ctx, "admin.setLogLevel", &SetLogLevelArgs{
 		Level: level.String(),

@@ -8,19 +8,19 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow/validators"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	"github.com/DioneProtocol/odysseygo/utils/set"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
 	"github.com/stretchr/testify/require"
 )
 
 var (
 	subnetID          = ids.GenerateTestID()
-	pChainHeight      = uint64(10)
+	oChainHeight      = uint64(10)
 	getSubnetIDF      = func(ctx context.Context, chainID ids.ID) (ids.ID, error) { return subnetID, nil }
-	getCurrentHeightF = func(ctx context.Context) (uint64, error) { return pChainHeight, nil }
+	getCurrentHeightF = func(ctx context.Context) (uint64, error) { return oChainHeight, nil }
 )
 
 type signatureAggregationTest struct {
@@ -46,7 +46,7 @@ func executeSignatureAggregationTest(t testing.TB, test signatureAggregationTest
 		&res.Message.UnsignedMessage,
 		networkID,
 		test.job.state,
-		pChainHeight,
+		oChainHeight,
 		test.job.minValidQuorumNum,
 		test.job.quorumDen,
 	))
@@ -56,11 +56,11 @@ func TestSingleSignatureAggregator(t *testing.T) {
 	ctx := context.Background()
 	aggregationJob := newSignatureAggregationJob(
 		&mockFetcher{
-			fetch: func(context.Context, ids.NodeID, *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(context.Context, ids.NodeID, *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				return blsSignatures[0], nil
 			},
 		},
-		pChainHeight,
+		oChainHeight,
 		subnetID,
 		100,
 		100,
@@ -81,10 +81,10 @@ func TestSingleSignatureAggregator(t *testing.T) {
 		unsignedMsg,
 	)
 
-	signature := &avalancheWarp.BitSetSignature{
+	signature := &odysseyWarp.BitSetSignature{
 		Signers: set.NewBits(0).Bytes(),
 	}
-	signedMessage, err := avalancheWarp.NewMessage(unsignedMsg, signature)
+	signedMessage, err := odysseyWarp.NewMessage(unsignedMsg, signature)
 	require.NoError(t, err)
 	copy(signature.Signature[:], bls.SignatureToBytes(blsSignatures[0]))
 	expectedRes := &AggregateSignatureResult{
@@ -103,7 +103,7 @@ func TestAggregateAllSignatures(t *testing.T) {
 	ctx := context.Background()
 	aggregationJob := newSignatureAggregationJob(
 		&mockFetcher{
-			fetch: func(_ context.Context, nodeID ids.NodeID, _ *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(_ context.Context, nodeID ids.NodeID, _ *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				for i, matchingNodeID := range nodeIDs {
 					if matchingNodeID == nodeID {
 						return blsSignatures[i], nil
@@ -112,7 +112,7 @@ func TestAggregateAllSignatures(t *testing.T) {
 				panic("request to unexpected nodeID")
 			},
 		},
-		pChainHeight,
+		oChainHeight,
 		subnetID,
 		100,
 		100,
@@ -135,10 +135,10 @@ func TestAggregateAllSignatures(t *testing.T) {
 		unsignedMsg,
 	)
 
-	signature := &avalancheWarp.BitSetSignature{
+	signature := &odysseyWarp.BitSetSignature{
 		Signers: set.NewBits(0, 1, 2, 3, 4).Bytes(),
 	}
-	signedMessage, err := avalancheWarp.NewMessage(unsignedMsg, signature)
+	signedMessage, err := odysseyWarp.NewMessage(unsignedMsg, signature)
 	require.NoError(t, err)
 	aggregateSignature, err := bls.AggregateSignatures(blsSignatures)
 	require.NoError(t, err)
@@ -159,7 +159,7 @@ func TestAggregateThresholdSignatures(t *testing.T) {
 	ctx := context.Background()
 	aggregationJob := newSignatureAggregationJob(
 		&mockFetcher{
-			fetch: func(_ context.Context, nodeID ids.NodeID, _ *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(_ context.Context, nodeID ids.NodeID, _ *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				for i, matchingNodeID := range nodeIDs[:3] {
 					if matchingNodeID == nodeID {
 						return blsSignatures[i], nil
@@ -168,7 +168,7 @@ func TestAggregateThresholdSignatures(t *testing.T) {
 				return nil, errors.New("what do we say to the god of death")
 			},
 		},
-		pChainHeight,
+		oChainHeight,
 		subnetID,
 		60,
 		60,
@@ -191,10 +191,10 @@ func TestAggregateThresholdSignatures(t *testing.T) {
 		unsignedMsg,
 	)
 
-	signature := &avalancheWarp.BitSetSignature{
+	signature := &odysseyWarp.BitSetSignature{
 		Signers: set.NewBits(0, 1, 2).Bytes(),
 	}
-	signedMessage, err := avalancheWarp.NewMessage(unsignedMsg, signature)
+	signedMessage, err := odysseyWarp.NewMessage(unsignedMsg, signature)
 	require.NoError(t, err)
 	aggregateSignature, err := bls.AggregateSignatures(blsSignatures)
 	require.NoError(t, err)
@@ -215,7 +215,7 @@ func TestAggregateThresholdSignaturesInsufficientWeight(t *testing.T) {
 	ctx := context.Background()
 	aggregationJob := newSignatureAggregationJob(
 		&mockFetcher{
-			fetch: func(_ context.Context, nodeID ids.NodeID, _ *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(_ context.Context, nodeID ids.NodeID, _ *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				for i, matchingNodeID := range nodeIDs[:3] {
 					if matchingNodeID == nodeID {
 						return blsSignatures[i], nil
@@ -224,7 +224,7 @@ func TestAggregateThresholdSignaturesInsufficientWeight(t *testing.T) {
 				return nil, errors.New("what do we say to the god of death")
 			},
 		},
-		pChainHeight,
+		oChainHeight,
 		subnetID,
 		80,
 		80,
@@ -250,7 +250,7 @@ func TestAggregateThresholdSignaturesInsufficientWeight(t *testing.T) {
 	executeSignatureAggregationTest(t, signatureAggregationTest{
 		ctx:         ctx,
 		job:         aggregationJob,
-		expectedErr: avalancheWarp.ErrInsufficientWeight,
+		expectedErr: odysseyWarp.ErrInsufficientWeight,
 	})
 }
 
@@ -258,7 +258,7 @@ func TestAggregateThresholdSignaturesBlockingRequests(t *testing.T) {
 	ctx := context.Background()
 	aggregationJob := newSignatureAggregationJob(
 		&mockFetcher{
-			fetch: func(ctx context.Context, nodeID ids.NodeID, _ *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(ctx context.Context, nodeID ids.NodeID, _ *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				for i, matchingNodeID := range nodeIDs[:3] {
 					if matchingNodeID == nodeID {
 						return blsSignatures[i], nil
@@ -270,7 +270,7 @@ func TestAggregateThresholdSignaturesBlockingRequests(t *testing.T) {
 				return nil, ctx.Err()
 			},
 		},
-		pChainHeight,
+		oChainHeight,
 		subnetID,
 		60,
 		60,
@@ -293,10 +293,10 @@ func TestAggregateThresholdSignaturesBlockingRequests(t *testing.T) {
 		unsignedMsg,
 	)
 
-	signature := &avalancheWarp.BitSetSignature{
+	signature := &odysseyWarp.BitSetSignature{
 		Signers: set.NewBits(0, 1, 2).Bytes(),
 	}
-	signedMessage, err := avalancheWarp.NewMessage(unsignedMsg, signature)
+	signedMessage, err := odysseyWarp.NewMessage(unsignedMsg, signature)
 	require.NoError(t, err)
 	aggregateSignature, err := bls.AggregateSignatures(blsSignatures)
 	require.NoError(t, err)
@@ -318,13 +318,13 @@ func TestAggregateThresholdSignaturesParentCtxCancels(t *testing.T) {
 	cancel()
 	aggregationJob := newSignatureAggregationJob(
 		&mockFetcher{
-			fetch: func(ctx context.Context, nodeID ids.NodeID, _ *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
+			fetch: func(ctx context.Context, nodeID ids.NodeID, _ *odysseyWarp.UnsignedMessage) (*bls.Signature, error) {
 				// Block until the context is cancelled and return the error if not available
 				<-ctx.Done()
 				return nil, ctx.Err()
 			},
 		},
-		pChainHeight,
+		oChainHeight,
 		subnetID,
 		60,
 		60,
@@ -350,6 +350,6 @@ func TestAggregateThresholdSignaturesParentCtxCancels(t *testing.T) {
 	executeSignatureAggregationTest(t, signatureAggregationTest{
 		ctx:         ctx,
 		job:         aggregationJob,
-		expectedErr: avalancheWarp.ErrInsufficientWeight,
+		expectedErr: odysseyWarp.ErrInsufficientWeight,
 	})
 }

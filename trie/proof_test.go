@@ -34,8 +34,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/ava-labs/subnet-evm/core/rawdb"
-	"github.com/ava-labs/subnet-evm/ethdb/memorydb"
+	"github.com/DioneProtocol/subnet-evm/core/rawdb"
+	"github.com/DioneProtocol/subnet-evm/ethdb/memorydb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )

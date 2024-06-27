@@ -15,73 +15,73 @@ import (
 	"sync"
 	"time"
 
-	avalanchegoMetrics "github.com/ava-labs/avalanchego/api/metrics"
-	"github.com/ava-labs/avalanchego/network/p2p"
-	"github.com/ava-labs/avalanchego/network/p2p/gossip"
-	avalanchegoConstants "github.com/ava-labs/avalanchego/utils/constants"
+	odysseygoMetrics "github.com/DioneProtocol/odysseygo/api/metrics"
+	"github.com/DioneProtocol/odysseygo/network/p2p"
+	"github.com/DioneProtocol/odysseygo/network/p2p/gossip"
+	odysseygoConstants "github.com/DioneProtocol/odysseygo/utils/constants"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ava-labs/subnet-evm/commontype"
-	"github.com/ava-labs/subnet-evm/constants"
-	"github.com/ava-labs/subnet-evm/core"
-	"github.com/ava-labs/subnet-evm/core/rawdb"
-	"github.com/ava-labs/subnet-evm/core/txpool"
-	"github.com/ava-labs/subnet-evm/core/types"
-	"github.com/ava-labs/subnet-evm/eth"
-	"github.com/ava-labs/subnet-evm/eth/ethconfig"
-	"github.com/ava-labs/subnet-evm/metrics"
-	subnetEVMPrometheus "github.com/ava-labs/subnet-evm/metrics/prometheus"
-	"github.com/ava-labs/subnet-evm/miner"
-	"github.com/ava-labs/subnet-evm/node"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/peer"
-	"github.com/ava-labs/subnet-evm/plugin/evm/message"
-	"github.com/ava-labs/subnet-evm/rpc"
-	statesyncclient "github.com/ava-labs/subnet-evm/sync/client"
-	"github.com/ava-labs/subnet-evm/sync/client/stats"
-	"github.com/ava-labs/subnet-evm/trie"
-	"github.com/ava-labs/subnet-evm/warp"
-	"github.com/ava-labs/subnet-evm/warp/aggregator"
-	warpValidators "github.com/ava-labs/subnet-evm/warp/validators"
+	"github.com/DioneProtocol/subnet-evm/commontype"
+	"github.com/DioneProtocol/subnet-evm/constants"
+	"github.com/DioneProtocol/subnet-evm/core"
+	"github.com/DioneProtocol/subnet-evm/core/rawdb"
+	"github.com/DioneProtocol/subnet-evm/core/txpool"
+	"github.com/DioneProtocol/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/eth"
+	"github.com/DioneProtocol/subnet-evm/eth/ethconfig"
+	"github.com/DioneProtocol/subnet-evm/metrics"
+	subnetEVMPrometheus "github.com/DioneProtocol/subnet-evm/metrics/prometheus"
+	"github.com/DioneProtocol/subnet-evm/miner"
+	"github.com/DioneProtocol/subnet-evm/node"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/peer"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm/message"
+	"github.com/DioneProtocol/subnet-evm/rpc"
+	statesyncclient "github.com/DioneProtocol/subnet-evm/sync/client"
+	"github.com/DioneProtocol/subnet-evm/sync/client/stats"
+	"github.com/DioneProtocol/subnet-evm/trie"
+	"github.com/DioneProtocol/subnet-evm/warp"
+	"github.com/DioneProtocol/subnet-evm/warp/aggregator"
+	warpValidators "github.com/DioneProtocol/subnet-evm/warp/validators"
 
 	// Force-load tracer engine to trigger registration
 	//
 	// We must import this package (not referenced elsewhere) so that the native "callTracer"
 	// is added to a map of client-accessible tracers. In geth, this is done
 	// inside of cmd/geth.
-	_ "github.com/ava-labs/subnet-evm/eth/tracers/js"
-	_ "github.com/ava-labs/subnet-evm/eth/tracers/native"
+	_ "github.com/DioneProtocol/subnet-evm/eth/tracers/js"
+	_ "github.com/DioneProtocol/subnet-evm/eth/tracers/native"
 
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
 	// Force-load precompiles to trigger registration
-	_ "github.com/ava-labs/subnet-evm/precompile/registry"
+	_ "github.com/DioneProtocol/subnet-evm/precompile/registry"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	avalancheRPC "github.com/gorilla/rpc/v2"
+	odysseyRPC "github.com/gorilla/rpc/v2"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/manager"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	cjson "github.com/ava-labs/avalanchego/utils/json"
-	"github.com/ava-labs/avalanchego/utils/perms"
-	"github.com/ava-labs/avalanchego/utils/profiler"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/vms/components/chain"
+	"github.com/DioneProtocol/odysseygo/codec"
+	"github.com/DioneProtocol/odysseygo/database"
+	"github.com/DioneProtocol/odysseygo/database/manager"
+	"github.com/DioneProtocol/odysseygo/database/prefixdb"
+	"github.com/DioneProtocol/odysseygo/database/versiondb"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow"
+	"github.com/DioneProtocol/odysseygo/snow/choices"
+	"github.com/DioneProtocol/odysseygo/snow/consensus/snowman"
+	"github.com/DioneProtocol/odysseygo/snow/engine/snowman/block"
+	cjson "github.com/DioneProtocol/odysseygo/utils/json"
+	"github.com/DioneProtocol/odysseygo/utils/perms"
+	"github.com/DioneProtocol/odysseygo/utils/profiler"
+	"github.com/DioneProtocol/odysseygo/utils/timer/mockable"
+	"github.com/DioneProtocol/odysseygo/utils/units"
+	"github.com/DioneProtocol/odysseygo/vms/components/chain"
 
-	commonEng "github.com/ava-labs/avalanchego/snow/engine/common"
+	commonEng "github.com/DioneProtocol/odysseygo/snow/engine/common"
 
-	avalancheJSON "github.com/ava-labs/avalanchego/utils/json"
+	odysseyJSON "github.com/DioneProtocol/odysseygo/utils/json"
 )
 
 var (
@@ -238,7 +238,7 @@ type VM struct {
 	router     *p2p.Router
 
 	// Metrics
-	multiGatherer avalanchegoMetrics.MultiGatherer
+	multiGatherer odysseygoMetrics.MultiGatherer
 	sdkMetrics    *prometheus.Registry
 
 	bootstrapped bool
@@ -246,9 +246,9 @@ type VM struct {
 	logger SubnetEVMLogger
 	// State sync server and client
 	StateSyncServer
-	StateSyncClient
+	StateSyndClient
 
-	// Avalanche Warp Messaging backend
+	// Odyssey Warp Messaging backend
 	// Used to serve BLS signatures of warp messages over RPC
 	warpBackend warp.Backend
 }
@@ -351,8 +351,8 @@ func (vm *VM) Initialize(
 			return fmt.Errorf("could not read airdrop file '%s': %w", vm.config.AirdropFile, err)
 		}
 	}
-	// Set the Avalanche Context on the ChainConfig
-	g.Config.AvalancheContext = params.AvalancheContext{
+	// Set the Odyssey Context on the ChainConfig
+	g.Config.OdysseyContext = params.OdysseyContext{
 		SnowCtx: chainCtx,
 	}
 	vm.syntacticBlockValidator = NewBlockValidator()
@@ -379,9 +379,9 @@ func (vm *VM) Initialize(
 
 	vm.ethConfig = ethconfig.NewDefaultConfig()
 	vm.ethConfig.Genesis = g
-	// NetworkID here is different than Avalanche's NetworkID.
-	// Avalanche's NetworkID represents the Avalanche network is running on
-	// like Fuji, Mainnet, Local, etc.
+	// NetworkID here is different than Odyssey's NetworkID.
+	// Odyssey's NetworkID represents the Odyssey network is running on
+	// like Testnet, Mainnet, Local, etc.
 	// The NetworkId here is kept same as ChainID to be compatible with
 	// Ethereum tooling.
 	vm.ethConfig.NetworkId = g.Config.ChainID.Uint64()
@@ -492,7 +492,7 @@ func (vm *VM) Initialize(
 
 func (vm *VM) initializeMetrics() error {
 	vm.sdkMetrics = prometheus.NewRegistry()
-	vm.multiGatherer = avalanchegoMetrics.NewMultiGatherer()
+	vm.multiGatherer = odysseygoMetrics.NewMultiGatherer()
 	// If metrics are enabled, register the default metrics regitry
 	if metrics.Enabled {
 		gatherer := subnetEVMPrometheus.Gatherer(metrics.DefaultRegistry)
@@ -561,7 +561,7 @@ func (vm *VM) initializeStateSyncClient(lastAcceptedHeight uint64) error {
 		}
 	}
 
-	vm.StateSyncClient = NewStateSyncClient(&stateSyncClientConfig{
+	vm.StateSyndClient = NewStateSyndClient(&stateSyndClientConfig{
 		chain: vm.eth,
 		state: vm.State,
 		client: statesyncclient.NewClient(
@@ -588,7 +588,7 @@ func (vm *VM) initializeStateSyncClient(lastAcceptedHeight uint64) error {
 	// If StateSync is disabled, clear any ongoing summary so that we will not attempt to resume
 	// sync using a snapshot that has been modified by the node running normal operations.
 	if !vm.config.StateSyncEnabled {
-		return vm.StateSyncClient.StateSyncClearOngoingSummary()
+		return vm.StateSyndClient.StateSyncClearOngoingSummary()
 	}
 
 	return nil
@@ -640,7 +640,7 @@ func (vm *VM) SetState(_ context.Context, state snow.State) error {
 		return nil
 	case snow.Bootstrapping:
 		vm.bootstrapped = false
-		if err := vm.StateSyncClient.Error(); err != nil {
+		if err := vm.StateSyndClient.Error(); err != nil {
 			return err
 		}
 		return nil
@@ -756,7 +756,7 @@ func (vm *VM) Shutdown(context.Context) error {
 		vm.cancel()
 	}
 	vm.Network.Shutdown()
-	if err := vm.StateSyncClient.Shutdown(); err != nil {
+	if err := vm.StateSyndClient.Shutdown(); err != nil {
 		log.Error("error stopping state syncer", "err", err)
 	}
 	close(vm.shutdownChan)
@@ -773,7 +773,7 @@ func (vm *VM) buildBlock(ctx context.Context) (snowman.Block, error) {
 
 func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (snowman.Block, error) {
 	if proposerVMBlockCtx != nil {
-		log.Debug("Building block with context", "pChainBlockHeight", proposerVMBlockCtx.PChainHeight)
+		log.Debug("Building block with context", "oChainBlockHeight", proposerVMBlockCtx.OChainHeight)
 	} else {
 		log.Debug("Building block without context")
 	}
@@ -899,9 +899,9 @@ func (vm *VM) Version(context.Context) (string, error) {
 //     By default the LockOption is WriteLock
 //     [lockOption] should have either 0 or 1 elements. Elements beside the first are ignored.
 func newHandler(name string, service interface{}, lockOption ...commonEng.LockOption) (*commonEng.HTTPHandler, error) {
-	server := avalancheRPC.NewServer()
-	server.RegisterCodec(avalancheJSON.NewCodec(), "application/json")
-	server.RegisterCodec(avalancheJSON.NewCodec(), "application/json;charset=UTF-8")
+	server := odysseyRPC.NewServer()
+	server.RegisterCodec(odysseyJSON.NewCodec(), "application/json")
+	server.RegisterCodec(odysseyJSON.NewCodec(), "application/json;charset=UTF-8")
 	if err := server.RegisterService(service, name); err != nil {
 		return nil, err
 	}
@@ -970,7 +970,7 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]*commonEng.HTTPHandler
 
 // CreateStaticHandlers makes new http handlers that can handle API calls
 func (vm *VM) CreateStaticHandlers(context.Context) (map[string]*commonEng.HTTPHandler, error) {
-	server := avalancheRPC.NewServer()
+	server := odysseyRPC.NewServer()
 	codec := cjson.NewCodec()
 	server.RegisterCodec(codec, "application/json")
 	server.RegisterCodec(codec, "application/json;charset=UTF-8")
@@ -1094,11 +1094,11 @@ func attachEthService(handler *rpc.Server, apis []rpc.API, names []string) error
 // along with a flag that indicates if returned upgrades should be strictly enforced.
 func getMandatoryNetworkUpgrades(networkID uint32) (params.MandatoryNetworkUpgrades, bool) {
 	switch networkID {
-	case avalanchegoConstants.MainnetID:
+	case odysseygoConstants.MainnetID:
 		return params.MainnetNetworkUpgrades, true
-	case avalanchegoConstants.FujiID:
-		return params.FujiNetworkUpgrades, true
-	case avalanchegoConstants.UnitTestID:
+	case odysseygoConstants.TestnetID:
+		return params.TestnetNetworkUpgrades, true
+	case odysseygoConstants.UnitTestID:
 		return params.UnitTestNetworkUpgrades, false
 	default:
 		return params.LocalNetworkUpgrades, false

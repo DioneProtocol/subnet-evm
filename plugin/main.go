@@ -6,12 +6,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/version"
-	"github.com/ava-labs/subnet-evm/plugin/evm"
-	"github.com/ava-labs/subnet-evm/plugin/runner"
+	"github.com/DioneProtocol/odysseygo/version"
+	"github.com/DioneProtocol/subnet-evm/plugin/evm"
+	"github.com/DioneProtocol/subnet-evm/plugin/runner"
 )
 
 func main() {
-	versionString := fmt.Sprintf("Subnet-EVM/%s [AvalancheGo=%s, rpcchainvm=%d]", evm.Version, version.Current, version.RPCChainVMProtocol)
+	versionString := fmt.Sprintf("Subnet-EVM/%s [OdysseyGo=%s, rpcchainvm=%d]", evm.Version, version.Current, version.RPCChainVMProtocol)
 	runner.Run(versionString)
 }

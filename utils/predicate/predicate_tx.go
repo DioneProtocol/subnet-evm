@@ -6,7 +6,7 @@ package predicate
 import (
 	"math/big"
 
-	"github.com/ava-labs/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -7,10 +7,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/subnet-evm/core/types"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/precompile/precompileconfig"
+	"github.com/DioneProtocol/odysseygo/snow/engine/snowman/block"
+	"github.com/DioneProtocol/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/precompile/precompileconfig"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -243,7 +243,7 @@ func TestCheckPredicate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
 			// Create the rules from TestChainConfig and update the predicates based on the test params
-			rules := params.TestChainConfig.AvalancheRules(common.Big0, 0)
+			rules := params.TestChainConfig.OdysseyRules(common.Big0, 0)
 			if test.createPredicates != nil {
 				for address, predicater := range test.createPredicates(t) {
 					rules.Predicates[address] = predicater
@@ -257,7 +257,7 @@ func TestCheckPredicate(t *testing.T) {
 			})
 			predicateContext := &precompileconfig.PredicateContext{
 				ProposerVMBlockCtx: &block.Context{
-					PChainHeight: 10,
+					OChainHeight: 10,
 				},
 			}
 			predicateRes, err := CheckPredicates(rules, predicateContext, tx)

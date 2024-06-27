@@ -12,25 +12,25 @@ import (
 
 	_ "embed"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/vms/components/chain"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/subnet-evm/core"
-	"github.com/ava-labs/subnet-evm/core/rawdb"
-	"github.com/ava-labs/subnet-evm/core/types"
-	"github.com/ava-labs/subnet-evm/eth/tracers"
-	"github.com/ava-labs/subnet-evm/params"
-	"github.com/ava-labs/subnet-evm/precompile/contract"
-	subnetEVMUtils "github.com/ava-labs/subnet-evm/utils"
-	predicateutils "github.com/ava-labs/subnet-evm/utils/predicate"
-	warpPayload "github.com/ava-labs/subnet-evm/warp/payload"
-	"github.com/ava-labs/subnet-evm/x/warp"
+	"github.com/DioneProtocol/odysseygo/ids"
+	"github.com/DioneProtocol/odysseygo/snow/choices"
+	"github.com/DioneProtocol/odysseygo/snow/engine/snowman/block"
+	"github.com/DioneProtocol/odysseygo/snow/validators"
+	"github.com/DioneProtocol/odysseygo/utils"
+	"github.com/DioneProtocol/odysseygo/utils/crypto/bls"
+	"github.com/DioneProtocol/odysseygo/utils/set"
+	"github.com/DioneProtocol/odysseygo/vms/components/chain"
+	odysseyWarp "github.com/DioneProtocol/odysseygo/vms/omegavm/warp"
+	"github.com/DioneProtocol/subnet-evm/core"
+	"github.com/DioneProtocol/subnet-evm/core/rawdb"
+	"github.com/DioneProtocol/subnet-evm/core/types"
+	"github.com/DioneProtocol/subnet-evm/eth/tracers"
+	"github.com/DioneProtocol/subnet-evm/params"
+	"github.com/DioneProtocol/subnet-evm/precompile/contract"
+	subnetEVMUtils "github.com/DioneProtocol/subnet-evm/utils"
+	predicateutils "github.com/DioneProtocol/subnet-evm/utils/predicate"
+	warpPayload "github.com/DioneProtocol/subnet-evm/warp/payload"
+	"github.com/DioneProtocol/subnet-evm/x/warp"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -65,7 +65,7 @@ func TestSendWarpMessage(t *testing.T) {
 	payload := utils.RandomBytes(100)
 
 	warpSendMessageInput, err := warp.PackSendWarpMessage(warp.SendWarpMessageInput{
-		DestinationChainID: common.Hash(vm.ctx.CChainID),
+		DestinationChainID: common.Hash(vm.ctx.DChainID),
 		DestinationAddress: testEthAddrs[1],
 		Payload:            payload,
 	})
@@ -96,13 +96,13 @@ func TestSendWarpMessage(t *testing.T) {
 	require.Len(receipts[0].Logs, 1)
 	expectedTopics := []common.Hash{
 		warp.WarpABI.Events["SendWarpMessage"].ID,
-		common.Hash(vm.ctx.CChainID),
+		common.Hash(vm.ctx.DChainID),
 		testEthAddrs[1].Hash(),
 		testEthAddrs[0].Hash(),
 	}
 	require.Equal(expectedTopics, receipts[0].Logs[0].Topics)
 	logData := receipts[0].Logs[0].Data
-	unsignedMessage, err := avalancheWarp.ParseUnsignedMessage(logData)
+	unsignedMessage, err := odysseyWarp.ParseUnsignedMessage(logData)
 	require.NoError(err)
 	unsignedMessageID := unsignedMessage.ID()
 
@@ -144,7 +144,7 @@ func TestValidateWarpMessage(t *testing.T) {
 		payload,
 	)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
+	unsignedMessage, err := odysseyWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -176,7 +176,7 @@ func TestValidateInvalidWarpMessage(t *testing.T) {
 		payload,
 	)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
+	unsignedMessage, err := odysseyWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -195,7 +195,7 @@ func TestValidateWarpBlockHash(t *testing.T) {
 	blockHash := ids.GenerateTestID()
 	blockHashPayload, err := warpPayload.NewBlockHashPayload(common.Hash(blockHash))
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := odysseyWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -216,7 +216,7 @@ func TestValidateInvalidWarpBlockHash(t *testing.T) {
 	blockHash := ids.GenerateTestID()
 	blockHashPayload, err := warpPayload.NewBlockHashPayload(common.Hash(blockHash))
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := odysseyWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -229,7 +229,7 @@ func TestValidateInvalidWarpBlockHash(t *testing.T) {
 	testWarpVMTransaction(t, unsignedMessage, false, exampleWarpPayload)
 }
 
-func testWarpVMTransaction(t *testing.T, unsignedMessage *avalancheWarp.UnsignedMessage, validSignature bool, txPayload []byte) {
+func testWarpVMTransaction(t *testing.T, unsignedMessage *odysseyWarp.UnsignedMessage, validSignature bool, txPayload []byte) {
 	require := require.New(t)
 	genesis := &core.Genesis{}
 	require.NoError(genesis.UnmarshalJSON([]byte(genesisJSONDUpgrade)))
@@ -263,16 +263,16 @@ func testWarpVMTransaction(t *testing.T, unsignedMessage *avalancheWarp.Unsigned
 	blsAggregatedSignature, err := bls.AggregateSignatures([]*bls.Signature{blsSignature1, blsSignature2})
 	require.NoError(err)
 
-	minimumValidPChainHeight := uint64(10)
+	minimumValidOChainHeight := uint64(10)
 	getValidatorSetTestErr := errors.New("can't get validator set test error")
 
 	vm.ctx.ValidatorState = &validators.TestState{
-		// TODO: test both Primary Network / C-Chain and non-Primary Network
+		// TODO: test both Primary Network / D-Chain and non-Primary Network
 		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			return ids.Empty, nil
 		},
 		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
-			if height < minimumValidPChainHeight {
+			if height < minimumValidOChainHeight {
 				return nil, getValidatorSetTestErr
 			}
 			return map[ids.NodeID]*validators.GetValidatorOutput{
@@ -294,14 +294,14 @@ func testWarpVMTransaction(t *testing.T, unsignedMessage *avalancheWarp.Unsigned
 	signersBitSet.Add(0)
 	signersBitSet.Add(1)
 
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &odysseyWarp.BitSetSignature{
 		Signers: signersBitSet.Bytes(),
 	}
 
 	blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 	copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-	signedMessage, err := avalancheWarp.NewMessage(
+	signedMessage, err := odysseyWarp.NewMessage(
 		unsignedMessage,
 		warpSignature,
 	)
@@ -340,10 +340,10 @@ func testWarpVMTransaction(t *testing.T, unsignedMessage *avalancheWarp.Unsigned
 
 	// If [validSignature] set the signature to be considered valid at the verified height.
 	blockCtx := &block.Context{
-		PChainHeight: minimumValidPChainHeight - 1,
+		OChainHeight: minimumValidOChainHeight - 1,
 	}
 	if validSignature {
-		blockCtx.PChainHeight = minimumValidPChainHeight
+		blockCtx.OChainHeight = minimumValidOChainHeight
 	}
 	vm.clock.Set(vm.clock.Time().Add(2 * time.Second))
 	<-issuer
@@ -409,12 +409,12 @@ func TestReceiveWarpMessage(t *testing.T) {
 
 	addressedPayload, err := warpPayload.NewAddressedPayload(
 		testEthAddrs[0],
-		common.Hash(vm.ctx.CChainID),
+		common.Hash(vm.ctx.DChainID),
 		testEthAddrs[1],
 		payload,
 	)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(
+	unsignedMessage, err := odysseyWarp.NewUnsignedMessage(
 		vm.ctx.NetworkID,
 		vm.ctx.ChainID,
 		addressedPayload.Bytes(),
@@ -436,7 +436,7 @@ func TestReceiveWarpMessage(t *testing.T) {
 	blsAggregatedSignature, err := bls.AggregateSignatures([]*bls.Signature{blsSignature1, blsSignature2})
 	require.NoError(err)
 
-	minimumValidPChainHeight := uint64(10)
+	minimumValidOChainHeight := uint64(10)
 	getValidatorSetTestErr := errors.New("can't get validator set test error")
 
 	vm.ctx.ValidatorState = &validators.TestState{
@@ -444,7 +444,7 @@ func TestReceiveWarpMessage(t *testing.T) {
 			return ids.Empty, nil
 		},
 		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
-			if height < minimumValidPChainHeight {
+			if height < minimumValidOChainHeight {
 				return nil, getValidatorSetTestErr
 			}
 			return map[ids.NodeID]*validators.GetValidatorOutput{
@@ -466,14 +466,14 @@ func TestReceiveWarpMessage(t *testing.T) {
 	signersBitSet.Add(0)
 	signersBitSet.Add(1)
 
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &odysseyWarp.BitSetSignature{
 		Signers: signersBitSet.Bytes(),
 	}
 
 	blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 	copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-	signedMessage, err := avalancheWarp.NewMessage(
+	signedMessage, err := odysseyWarp.NewMessage(
 		unsignedMessage,
 		warpSignature,
 	)
@@ -506,7 +506,7 @@ func TestReceiveWarpMessage(t *testing.T) {
 
 	// Build, verify, and accept block with valid proposer context.
 	validProposerCtx := &block.Context{
-		PChainHeight: minimumValidPChainHeight,
+		OChainHeight: minimumValidOChainHeight,
 	}
 	vm.clock.Set(vm.clock.Time().Add(2 * time.Second))
 	<-issuer
@@ -525,14 +525,14 @@ func TestReceiveWarpMessage(t *testing.T) {
 
 	// Verify the block with another valid context with identical predicate results
 	require.NoError(block2VerifyWithCtx.VerifyWithContext(context.Background(), &block.Context{
-		PChainHeight: minimumValidPChainHeight + 1,
+		OChainHeight: minimumValidOChainHeight + 1,
 	}))
 	require.Equal(choices.Processing, block2.Status())
 
 	// Verify the block in a different context causing the warp message to fail verification changing
 	// the expected header predicate results.
 	require.ErrorIs(block2VerifyWithCtx.VerifyWithContext(context.Background(), &block.Context{
-		PChainHeight: minimumValidPChainHeight - 1,
+		OChainHeight: minimumValidOChainHeight - 1,
 	}), errInvalidHeaderPredicateResults)
 
 	// Accept the block after performing multiple VerifyWithContext operations
@@ -549,7 +549,7 @@ func TestReceiveWarpMessage(t *testing.T) {
 		Message: warp.WarpMessage{
 			SourceChainID:       common.Hash(vm.ctx.ChainID),
 			OriginSenderAddress: testEthAddrs[0],
-			DestinationChainID:  common.Hash(vm.ctx.CChainID),
+			DestinationChainID:  common.Hash(vm.ctx.DChainID),
 			DestinationAddress:  testEthAddrs[1],
 			Payload:             payload,
 		},
