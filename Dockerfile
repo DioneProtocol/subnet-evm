@@ -1,32 +1,31 @@
-# syntax=docker/dockerfile:experimental
-
-# ============= Setting up base Stage ================
-# Set required ODYSSEY_VERSION parameter in build image script
-ARG ODYSSEY_VERSION
-
-# ============= Compilation Stage ================
+# Изменения минимальной версии Golang также должны быть отражены в
+# scripts/build_odyssey.sh
+# Dockerfile (здесь)
+# README.md
+# go.mod
+# ============= Стадия Компиляции ================
 FROM golang:1.20.8-bullseye AS builder
 
 WORKDIR /build
+# Скопировать и скачать зависимости Odyssey используя go mod
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 
-# Copy odyssey dependencies first (intermediate docker image caching)
-# Copy odysseygo directory if present (for manual CI case, which uses local dependency)
-COPY go.mod go.sum odysseygo* ./
-
-# Download odyssey dependencies using go mod
-RUN go mod download && go mod tidy -compat=1.20
-
-# Copy the code into the container
+# Скопировать код в контейнер
 COPY . .
 
-# Pass in SUBNET_EVM_COMMIT as an arg to allow the build script to set this externally
-ARG SUBNET_EVM_COMMIT
-ARG CURRENT_BRANCH
+# Сборка odysseygo
+RUN ./scripts/build.sh
 
-RUN export SUBNET_EVM_COMMIT=$SUBNET_EVM_COMMIT && export CURRENT_BRANCH=$CURRENT_BRANCH && ./scripts/build.sh /build/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
+# ============= Стадия Очистки ================
+FROM debian:11-slim AS execution
 
-# ============= Cleanup Stage ================
-FROM avaomega/odysseygo:$ODYSSEY_VERSION AS builtImage
+# Поддержание совместимости с предыдущими образами
+RUN mkdir -p /subnet-evm/build
+WORKDIR /subnet-evm/build
 
-# Copy the evm binary into the correct location in the container
-COPY --from=builder /build/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy /odysseygo/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
+# Копирование исполняемых файлов в контейнер
+COPY --from=builder /build/build/ .
+
+CMD [ "./subnet-evm" ]
