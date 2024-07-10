@@ -1,0 +1,43 @@
+name: Testing gitactions
+on:
+    push:
+        branches:
+            - devops
+
+jobs:
+    build-subnetevm:
+        name: Build subnet-evm binary
+        runs-on: ubuntu-latest
+        env:
+            ARCH: "amd64"
+        steps:
+        - uses: actions/checkout@v4
+    
+        - uses: ./.github/actions/install-deps
+    
+        - uses: ./.github/actions/setup-go
+    
+        - name: Build Binary
+          run: |
+            ./scripts/build.sh
+          shell: bash
+    
+        - name: Get current tag
+          id: get_tag
+          run: |
+            TAG=$(git describe --tags --abbrev=0)
+            echo "::set-output name=TAG::$TAG"
+          shell: bash
+    
+        - name: Archive binary in Targz
+          run: |
+            cd build
+            tar -czvf ../subnet-evm_${{ steps.get_tag.outputs.TAG }}_linux_amd64.tar.gz odysseygo
+          shell: bash
+    
+        - name: Upload artifact with odysseygo
+          uses: actions/upload-artifact@v4
+          with:
+            name: odysseygo-linux-amd64-test
+            path: subnet-evm_${{ steps.get_tag.outputs.TAG }}_linux_amd64.tar.gz
+            retention-days: 30
