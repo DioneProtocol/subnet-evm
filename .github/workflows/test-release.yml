@@ -49,11 +49,11 @@ jobs:
           fi
         shell: bash
 
-      - name: Archive binary in Targz
+      - name: Build and Archive binary
         run: |
           mkdir -p $HOME/bin
-          ./scripts/build.sh
-          cp $GOPATH/src/github.com/DioneProtocol/odysseygo/build/bin/subnet-evm $HOME/bin/subnet-evm
+          ./scripts/build.sh ./build/subnet-evm
+          cp ./build/subnet-evm $HOME/bin/subnet-evm
           cd $HOME/bin
           tar -czvf subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
           mv subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz $GITHUB_WORKSPACE
