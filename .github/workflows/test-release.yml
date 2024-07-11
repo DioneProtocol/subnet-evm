@@ -1,14 +1,20 @@
-name: Testing gitactions
+name: Build and Release Subnet EVM
 
 on:
   push:
     tags:
-      - test-v*.*
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to use for the release'
+        required: true
 
 jobs:
   build-subnetevm:
     name: Build subnet-evm binary
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,22 +26,31 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - uses: ./.github/actions/install-deps
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '>=18'
 
-      - uses: ./.github/actions/setup-go
-
       - name: Install npm dependencies
         run: npm install
-        working-directory: ./contracts
+        working-directory: ./contracts 
 
       - name: Compile contracts
         run: npx hardhat compile
         working-directory: ./contracts
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.19'
+
+      - name: Build binary
+        run: ./scripts/build.sh
+        shell: bash
+
+      - name: Copy binary
+        run: mkdir -p $HOME/bin && cp /home/runner/go/src/github.com/DioneProtocol/odysseygo/build/bin/subnet-evm $HOME/bin/subnet-evm
+        shell: bash
 
       - name: Determine Tag
         id: determine_tag
@@ -51,19 +66,15 @@ jobs:
 
       - name: Archive binary in Targz
         run: |
-          mkdir -p $HOME/bin
-          ./scripts/build.sh
-          cp $GOPATH/src/github.com/DioneProtocol/odysseygo/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy $HOME/bin/subnet-evm
           cd $HOME/bin
-          tar -czvf subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
-          mv subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz $GITHUB_WORKSPACE
+          tar -czvf $HOME/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
         shell: bash
 
       - name: Upload artifact with subnet-evm
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
-          path: $GITHUB_WORKSPACE/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          path: $HOME/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           retention-days: 30
 
       - name: Create Release
@@ -84,6 +95,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: $GITHUB_WORKSPACE/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          asset_path: $HOME/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_name: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar
