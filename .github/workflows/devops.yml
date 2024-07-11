@@ -3,7 +3,7 @@ name: Test Release Creation
 on:
   push:
     branches:
-      - main
+      - devops
 
 jobs:
   create-release:
