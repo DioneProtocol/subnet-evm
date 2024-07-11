@@ -22,7 +22,20 @@ jobs:
 
       - uses: ./.github/actions/install-deps
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '>=18'
+
       - uses: ./.github/actions/setup-go
+
+      - name: Install npm dependencies
+        run: npm install
+        working-directory: ./contracts
+
+      - name: Compile contracts
+        run: npx hardhat compile
+        working-directory: ./contracts
 
       - name: Determine Tag
         id: determine_tag
