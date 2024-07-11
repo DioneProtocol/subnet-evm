@@ -10,42 +10,57 @@ jobs:
     name: Build subnet-evm binary
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/install-deps
+      - name: Cache npm
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - uses: ./.github/actions/setup-go
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '>=18'
 
-      - name: Build Binary
+      - name: Install npm dependencies
+        run: npm install
+        working-directory: ./contracts
+
+      - name: Compile contracts
+        run: npx hardhat compile
+        working-directory: ./contracts
+
+      - name: Determine Tag
+        id: determine_tag
         run: |
-          ./scripts/build.sh
+          if [[ "${{ github.event_name }}" == 'push' ]]; then
+            echo "TAG=${GITHUB_REF/refs\/tags\//}" >> "$GITHUB_ENV"
+          elif [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            echo "TAG=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
+          else
+            echo "TAG=unknown" >> "$GITHUB_ENV"
+          fi
         shell: bash
 
-      - name: Try to get tag from git
-        if: ${{ github.event.inputs.tag == '' }}
-        id: get_tag_from_git
+      - name: Build and Archive binary
         run: |
-          echo "TAG=${GITHUB_REF/refs\/tags\//}" >> "$GITHUB_ENV"
+          mkdir -p $HOME/bin
+          ./scripts/build.sh $HOME/bin/subnet-evm
+          cd $HOME/bin
+          ARCHIVE_PATH="${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz"
+          tar -czvf "$ARCHIVE_PATH" subnet-evm
+          echo "Archive created at $ARCHIVE_PATH"
         shell: bash
 
-      - name: Try to get tag from workflow dispatch
-        if: ${{ github.event.inputs.tag != '' }}
-        id: get_tag_from_workflow
-        run: |
-          echo "TAG=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
-        shell: bash
-
-      - name: Archive binary in Targz
-        run: |
-          cd build
-          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz odysseygo
-        shell: bash
-
-      - name: Upload artifact with odysseygo
+      - name: Upload artifact with subnet-evm
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
-          path: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          path: ${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           retention-days: 30
 
       - name: Create Release
@@ -57,7 +72,7 @@ jobs:
           tag_name: ${{ env.TAG }}
           release_name: Release ${{ env.TAG }}
           draft: false
-          prerelease: true
+          prerelease: false
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -66,6 +81,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          asset_path: ${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_name: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar
