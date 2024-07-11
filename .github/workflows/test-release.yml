@@ -12,9 +12,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache npm
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - uses: ./.github/actions/install-deps
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # убрать хард код
+
       - uses: ./.github/actions/setup-go
+
+      - name: Install npm dependencies
+        run: npm install
+        shell: bash
 
       - name: Build Binary
         run: |
