@@ -34,6 +34,7 @@ jobs:
         shell: bash
 
       - name: Build and Archive binary
+        id: build_and_archive
         run: |
           mkdir -p $HOME/bin
           ./scripts/build.sh $HOME/bin/subnet-evm
@@ -53,7 +54,6 @@ jobs:
 
       - name: Create Release
         id: create_release
-        needs: upload_artifact
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,7 +64,6 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
-        needs: create_release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
