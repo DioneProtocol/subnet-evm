@@ -26,13 +26,13 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16' # убрать харкод
+        node-version: '18' # Установите Node.js версии 18
 
     - uses: ./.github/actions/setup-go
 
     - name: Install npm dependencies
       run: npm install
-      shell: bash
+      working-directory: ./contracts # Укажите правильную директорию
 
     - name: Build Binary
       run: |
@@ -56,5 +56,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: odysseygo-linux-amd64-test
-        path: subnet-evm_${{ steps.get_tag.outputs.TAG }}_linux_amd64.tar.gz
+        path: ./subnet-evm_${{ steps.get_tag.outputs.TAG }}_linux_amd64.tar.gz
         retention-days: 30
