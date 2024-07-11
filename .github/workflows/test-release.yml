@@ -10,9 +10,10 @@ jobs:
     name: Build subnet-evm binary
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Cache npm
+      - name: Cache npm dependencies
         uses: actions/cache@v2
         with:
           path: ~/.npm
@@ -20,22 +21,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - uses: ./.github/actions/install-deps
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./contracts
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '>=18'
 
-      - uses: ./.github/actions/setup-go
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
 
-      - name: Install npm dependencies
-        run: npm install
-        working-directory: ./contracts 
+      - name: Build Subnet-evm binary
+        run: ./scripts/build.sh
+        env:
+          GOPATH: $HOME/go
 
-      - name: Compile contracts
-        run: npx hardhat compile
-        working-directory: ./contracts  
       - name: Determine Tag
         id: determine_tag
         run: |
@@ -46,13 +48,12 @@ jobs:
           else
             echo "TAG=unknown" >> "$GITHUB_ENV"
           fi
-        shell: bash
 
-      - name: Archive binary in Targz
+      - name: Archive Subnet-evm binary
         run: |
-          
-          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
-        shell: bash
+          mkdir -p build
+          cp $GOPATH/src/github.com/DioneProtocol/odysseygo/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy build/subnet-evm
+          tar -czvf subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz -C build subnet-evm
 
       - name: Upload artifact with subnet-evm
         uses: actions/upload-artifact@v4
