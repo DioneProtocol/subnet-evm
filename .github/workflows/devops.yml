@@ -1,63 +1,24 @@
-name: Testing gitactions
+name: Test Release Creation
+
 on:
   push:
     branches:
-      - devops
+      - main
 
 jobs:
-  build-subnetevm:
-    name: Build subnet-evm binary
+  create-release:
     runs-on: ubuntu-latest
-    env:
-      ARCH: "amd64"
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Cache npm
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - uses: ./.github/actions/install-deps
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '>=18'
-
-    - uses: ./.github/actions/setup-go
-
-    - name: Install npm dependencies
-      run: npm install
-      working-directory: ./contracts 
-
-    - name: Compile contracts
-      run: npx hardhat compile
-      working-directory: ./contracts 
-
-    - name: Get current tag
-      id: get_tag
-      run: |
-        if git describe --tags --abbrev=0 >/dev/null 2>&1; then
-          TAG=$(git describe --tags --abbrev=0)
-        else
-          TAG="v0.1.0"  # Укажите здесь ваше значение по умолчанию, если теги отсутствуют
-        fi
-        echo "::set-output name=TAG::$TAG"
-      shell: bash
-
-    - name: Archive binary in Targz
-      run: |
-        cd build
-        tar -czvf ../subnet-evm_${{ steps.get_tag.outputs.TAG }}_linux_amd64.tar.gz odysseygo
-      shell: bash
-
-    - name: Upload artifact with odysseygo
-      uses: actions/upload-artifact@v4
-      with:
-        name: odysseygo-linux-amd64-test
-        path: ./subnet-evm_${{ steps.get_tag.outputs.TAG }}_linux_amd64.tar.gz
-        retention-days: 30
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: 'v1.0.0-test'
+          release_name: 'Test Release'
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
