@@ -51,10 +51,10 @@ jobs:
       - name: Archive binary in Targz
         run: |
           cd build
-          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz odysseygo
+          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
         shell: bash
 
-      - name: Upload artifact with odysseygo
+      - name: Upload artifact with subnet-evm
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
