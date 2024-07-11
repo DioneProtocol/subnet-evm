@@ -44,6 +44,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact with subnet-evm
+        id: upload_artifact
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
@@ -52,6 +53,7 @@ jobs:
 
       - name: Create Release
         id: create_release
+        needs: upload_artifact
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,7 +64,7 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
-        id: upload-release-asset
+        needs: create_release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
