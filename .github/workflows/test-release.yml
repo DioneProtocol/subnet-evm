@@ -1,4 +1,4 @@
-name: Testing github action with test release
+name: Testing gitactions
 
 on:
   push:
@@ -31,13 +31,11 @@ jobs:
 
       - name: Install npm dependencies
         run: npm install
-        shell: bash
+        working-directory: ./contracts 
 
-      - name: Build Binary
-        run: |
-          ./scripts/build.sh
-        shell: bash
-
+      - name: Compile contracts
+        run: npx hardhat compile
+        working-directory: ./contracts  
       - name: Determine Tag
         id: determine_tag
         run: |
@@ -50,18 +48,13 @@ jobs:
           fi
         shell: bash
 
-      - name: Create build directory if it doesn't exist
-        run: |
-          mkdir -p build
-        shell: bash
-
       - name: Archive binary in Targz
         run: |
-          cd build
-          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz odysseygo
+          
+          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
         shell: bash
 
-      - name: Upload artifact with odysseygo
+      - name: Upload artifact with subnet-evm
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
