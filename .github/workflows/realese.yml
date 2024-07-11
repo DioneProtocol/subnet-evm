@@ -1,9 +1,9 @@
-name: Testing gitactions
+name: Release subnet-evm with version
 
 on:
   push:
     tags:
-      - test-v*.*
+      - v*.*.*
 
 jobs:
   build-subnetevm:
@@ -12,58 +12,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache npm
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - uses: ./.github/actions/install-deps
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '>=18'
 
       - uses: ./.github/actions/setup-go
 
-      - name: Install npm dependencies
-        run: npm install
-        working-directory: ./contracts
-
-      - name: Compile contracts
-        run: npx hardhat compile
-        working-directory: ./contracts
-
-      - name: Determine Tag
-        id: determine_tag
+      - name: Build Binary
         run: |
-          if [[ "${{ github.event_name }}" == 'push' ]]; then
-            echo "TAG=${GITHUB_REF/refs\/tags\//}" >> "$GITHUB_ENV"
-          elif [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
-            echo "TAG=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
-          else
-            echo "TAG=unknown" >> "$GITHUB_ENV"
-          fi
+          ./scripts/build.sh
+        shell: bash
+
+      - name: Try to get tag from git
+        if: ${{ github.event.inputs.tag == '' }}
+        id: get_tag_from_git
+        run: |
+          echo "TAG=${GITHUB_REF/refs\/tags\//}" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Try to get tag from workflow dispatch
+        if: ${{ github.event.inputs.tag != '' }}
+        id: get_tag_from_workflow
+        run: |
+          echo "TAG=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Archive binary in Targz
         run: |
-          mkdir -p $HOME/bin
-          ./scripts/build.sh
-          cp $GOPATH/src/github.com/DioneProtocol/odysseygo/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy $HOME/bin/subnet-evm
-          cd $HOME/bin
-          tar -czvf subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
-          mv subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz $GITHUB_WORKSPACE
+          cd build
+          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz odysseygo
         shell: bash
 
-      - name: Upload artifact with subnet-evm
+      - name: Upload artifact with odysseygo
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
-          path: $GITHUB_WORKSPACE/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          path: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           retention-days: 30
 
       - name: Create Release
@@ -84,6 +66,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: $GITHUB_WORKSPACE/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          asset_path: ./subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_name: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar

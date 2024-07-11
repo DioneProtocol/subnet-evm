@@ -31,11 +31,12 @@ jobs:
 
       - name: Install npm dependencies
         run: npm install
-        working-directory: ./contracts 
+        working-directory: ./contracts
 
       - name: Compile contracts
         run: npx hardhat compile
-        working-directory: ./contracts  
+        working-directory: ./contracts
+
       - name: Determine Tag
         id: determine_tag
         run: |
@@ -50,15 +51,19 @@ jobs:
 
       - name: Archive binary in Targz
         run: |
-          cd build
-          tar -czvf ../subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz su
+          mkdir -p $HOME/bin
+          ./scripts/build.sh
+          cp $GOPATH/src/github.com/DioneProtocol/odysseygo/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy $HOME/bin/subnet-evm
+          cd $HOME/bin
+          tar -czvf subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz subnet-evm
+          mv subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz $GITHUB_WORKSPACE
         shell: bash
 
       - name: Upload artifact with subnet-evm
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
-          path: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          path: $GITHUB_WORKSPACE/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           retention-days: 30
 
       - name: Create Release
@@ -79,6 +84,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          asset_path: $GITHUB_WORKSPACE/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_name: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar
