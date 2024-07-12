@@ -20,6 +20,18 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '>=18'
+
+      - name: Install npm dependencies
+        run: npm install
+        working-directory: ./contracts
+
+      - name: Compile contracts
+        run: npx hardhat compile
+        working-directory: ./contracts
 
       - name: Determine Tag
         id: determine_tag
@@ -34,7 +46,6 @@ jobs:
         shell: bash
 
       - name: Build and Archive binary
-        id: build_and_archive
         run: |
           mkdir -p $HOME/bin
           ./scripts/build.sh $HOME/bin/subnet-evm
@@ -45,7 +56,6 @@ jobs:
         shell: bash
 
       - name: Upload artifact with subnet-evm
-        id: upload_artifact
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
@@ -64,6 +74,7 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
