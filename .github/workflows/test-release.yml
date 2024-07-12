@@ -9,8 +9,12 @@ jobs:
   build-subnetevm:
     name: Build subnet-evm binary
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Дает доступ к содержимому репозитория
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Cache npm
         uses: actions/cache@v2
@@ -20,14 +24,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - uses: ./.github/actions/install-deps
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '>=18'
-
-      - uses: ./.github/actions/setup-go
 
       - name: Install npm dependencies
         run: npm install
