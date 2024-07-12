@@ -9,12 +9,8 @@ jobs:
   build-subnetevm:
     name: Build subnet-evm binary
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Cache npm
         uses: actions/cache@v2
@@ -24,10 +20,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - uses: ./.github/actions/install-deps
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '>=18'
+
+      - uses: ./.github/actions/setup-go
 
       - name: Install npm dependencies
         run: npm install
@@ -41,7 +41,7 @@ jobs:
         id: determine_tag
         run: |
           if [[ "${{ github.event_name }}" == 'push' ]]; then
-            echo "TAG=${GITHUB_REF/refs/tags/}" >> "$GITHUB_ENV"
+            echo "TAG=${GITHUB_REF/refs\/tags\//}" >> "$GITHUB_ENV"
           elif [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
             echo "TAG=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
           else
@@ -53,9 +53,8 @@ jobs:
         run: |
           mkdir -p $HOME/bin
           ./scripts/build.sh $HOME/bin/subnet-evm
-          mkdir -p ${{ github.workspace }}/subnet-evm_tags/tags
           cd $HOME/bin
-          ARCHIVE_PATH="${{ github.workspace }}/subnet-evm_tags/tags/${{ env.TAG }}_linux_amd64.tar.gz"
+          ARCHIVE_PATH="${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz"
           tar -czvf "$ARCHIVE_PATH" subnet-evm
           echo "Archive created at $ARCHIVE_PATH"
         shell: bash
@@ -64,19 +63,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
-          path: ${{ github.workspace }}/subnet-evm_tags/tags/${{ env.TAG }}_linux_amd64.tar.gz
+          path: ${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           retention-days: 30
-
-  release:
-    name: Create and upload release
-    needs: build-subnetevm
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Create Release
         id: create_release
@@ -84,8 +72,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.build-subnetevm.outputs.TAG }}
-          release_name: Release ${{ needs.build-subnetevm.outputs.TAG }}
+          tag_name: ${{ env.TAG }}
+          release_name: Release ${{ env.TAG }}
           draft: false
           prerelease: false
 
@@ -96,6 +84,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/subnet-evm_tags/tags/${{ needs.build-subnetevm.outputs.TAG }}_linux_amd64.tar.gz
-          asset_name: subnet-evm_${{ needs.build-subnetevm.outputs.TAG }}_linux_amd64.tar.gz
+          asset_path: ${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          asset_name: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar
