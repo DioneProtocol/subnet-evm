@@ -87,3 +87,4 @@ jobs:
           asset_path: ${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_name: subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar
+        if: steps.create_release.outputs.upload_url != ''
