@@ -53,8 +53,9 @@ jobs:
         run: |
           mkdir -p $HOME/bin
           ./scripts/build.sh $HOME/bin/subnet-evm
+          mkdir -p ${{ github.workspace }}/subnet-evm_tags/tags
           cd $HOME/bin
-          ARCHIVE_PATH="${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz"
+          ARCHIVE_PATH="${{ github.workspace }}/subnet-evm_tags/tags/${{ env.TAG }}_linux_amd64.tar.gz"
           tar -czvf "$ARCHIVE_PATH" subnet-evm
           echo "Archive created at $ARCHIVE_PATH"
         shell: bash
@@ -63,7 +64,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: subnet-evm_${{ env.TAG }}_linux_amd64
-          path: ${{ github.workspace }}/subnet-evm_${{ env.TAG }}_linux_amd64.tar.gz
+          path: ${{ github.workspace }}/subnet-evm_tags/tags/${{ env.TAG }}_linux_amd64.tar.gz
           retention-days: 30
 
   release:
@@ -95,6 +96,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/subnet-evm_${{ needs.build-subnetevm.outputs.TAG }}_linux_amd64.tar.gz
+          asset_path: ${{ github.workspace }}/subnet-evm_tags/tags/${{ needs.build-subnetevm.outputs.TAG }}_linux_amd64.tar.gz
           asset_name: subnet-evm_${{ needs.build-subnetevm.outputs.TAG }}_linux_amd64.tar.gz
           asset_content_type: application/x-tar
