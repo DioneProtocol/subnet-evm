@@ -48,8 +48,8 @@ github.com/DioneProtocol/coreth v0.0.1 h1:lHnoFOLvfxDyoHa3Mt1X8RuxJ14z8nrJVVq3qo
 github.com/DioneProtocol/coreth v0.0.1/go.mod h1:w7VHbmdV47BnlIXzc/uNn8Tbx7m4GFhxvFCJwZxO5Nw=
 github.com/DioneProtocol/odyssey-network-runner v0.0.1 h1:erEP4E+YolLig+dN7EEstXQ9tY4gnDUjkZvjffYrSQs=
 github.com/DioneProtocol/odyssey-network-runner v0.0.1/go.mod h1:eCTlKD3lNhTLuij2nfA10v/u+iTqI1zmNNaqJshW4PU=
-github.com/DioneProtocol/odysseygo v0.0.1 h1:eKAuTMMtspUi/BuU1BxAOLWmXI+ucDoddjK/DyLbXvI=
-github.com/DioneProtocol/odysseygo v0.0.1/go.mod h1:VvtA/VVV+Niu/Ux8lcMhvQVn1eWaJzTNP/7jAW52U88=
+github.com/DioneProtocol/odysseygo v1.10.10 h1:yffSwSIhdw85u5OBM8EH3L/EPlZhiJ0Fc3isopjyi1k=
+github.com/DioneProtocol/odysseygo v1.10.10/go.mod h1:VvtA/VVV+Niu/Ux8lcMhvQVn1eWaJzTNP/7jAW52U88=
 github.com/Joker/hpp v1.0.0/go.mod h1:8x5n+M1Hp5hC0g8okX3sR3vFQwynaX/UgSOM9MeBKzY=
 github.com/Microsoft/go-winio v0.5.2 h1:a9IhgEQBCUEk6QCdml9CiJGhAws+YwffDHEMp1VMrpA=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
